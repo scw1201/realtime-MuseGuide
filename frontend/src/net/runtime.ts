@@ -15,3 +15,6 @@ function wsUrl(localPort: number, deployedPath: string) {
 export const API_BASE = apiOrigin
 export const ASR_WS_URL = wsUrl(9001, '/asr-ws')
 export const TTS_WS_URL = wsUrl(8765, '/tts-ws')
+export const LIVETALKING_BASE_URL =
+  (import.meta.env.VITE_LIVETALKING_BASE_URL as string | undefined) ||
+  (isLocalHost ? 'http://127.0.0.1:8010' : `${window.location.origin}/livetalking`)

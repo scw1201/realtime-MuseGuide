@@ -1,0 +1,16 @@
+name: museguide-livetalking
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - ffmpeg
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=12.1
+  - pip:
+      - PyYAML==6.0.3
+      - -r livetalking/requirements.txt

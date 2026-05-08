@@ -36,6 +36,9 @@ kill_port() {
 kill_port 9001
 kill_port 8765
 kill_port 8000
+if [ "${ENABLE_LIVETALKING:-0}" = "1" ]; then
+  kill_port "${LIVETALKING_PORT:-8010}"
+fi
 
 # ============================
 # 退出时清理本次启动的进程
@@ -45,6 +48,7 @@ cleanup() {
   if [ -n "${ASR_PID:-}" ]; then kill "$ASR_PID" 2>/dev/null || true; fi
   if [ -n "${TTS_PID:-}" ]; then kill "$TTS_PID" 2>/dev/null || true; fi
   if [ -n "${API_PID:-}" ]; then kill "$API_PID" 2>/dev/null || true; fi
+  if [ -n "${LIVETALKING_PID:-}" ]; then kill "$LIVETALKING_PID" 2>/dev/null || true; fi
   if [ -n "${FRONTEND_PID:-}" ]; then kill "$FRONTEND_PID" 2>/dev/null || true; fi
 }
 trap cleanup EXIT
@@ -84,6 +88,18 @@ fi
 
 API_PID=$!
 echo "   ↳ API PID: $API_PID"
+
+# ============================
+# 可选启动 LiveTalking 实时口型服务
+# ============================
+if [ "${ENABLE_LIVETALKING:-0}" = "1" ]; then
+  echo "🗣 Starting LiveTalking lip-sync server (${LIVETALKING_PORT:-8010})..."
+  PY_BIN="${LIVETALKING_PY_BIN:-${PY_BIN}}" \
+    LIVETALKING_PORT="${LIVETALKING_PORT:-8010}" \
+    bash scripts/run_livetalking.sh &
+  LIVETALKING_PID=$!
+  echo "   ↳ LiveTalking PID: $LIVETALKING_PID"
+fi
 
 # ============================
 # 启动前端 Vite Dev Server

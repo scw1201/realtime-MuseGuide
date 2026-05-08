@@ -87,7 +87,7 @@ export function createController(ui: UI) {
   let autoTimer: number | null = null
   let pendingAutoText: string | null = null
   const autoAdvanceEnabled = false
-  const liveAvatarPreconnectEnabled = true
+  const liveAvatarPreconnectEnabled = false
   let guideReplyCount = 0
   let lastGuideStage = ''
   let lastZoneId = ''
@@ -124,8 +124,8 @@ export function createController(ui: UI) {
     }
     ui.liveAvatarToggle.disabled = false
     ui.liveAvatarToggle.textContent = liveAvatar.isConnected
-      ? '关闭实时数字人'
-      : '接入实时数字人'
+      ? '关闭实时口型'
+      : '接入实时口型'
   }
 
   function renderLiveAvatarLog() {
@@ -159,9 +159,15 @@ export function createController(ui: UI) {
         return
       }
 
+      if (currentPersonaId !== 'woman_demo') {
+        ui.liveAvatarStatus.textContent = '当前仅支持女导览员'
+        updateLiveAvatarToggle()
+        return
+      }
+
       ui.liveAvatarStatus.textContent = '连接中…'
       updateLiveAvatarToggle()
-      await liveAvatar.start()
+      await liveAvatar.start(currentPersonaId)
       ui.liveAvatarStatus.textContent = '已连接'
       updateLiveAvatarToggle()
     } catch (err) {
@@ -511,6 +517,10 @@ export function createController(ui: UI) {
 
     window.setTimeout(() => {
       currentPersonaId = id
+      if (liveAvatar.isConnected && id !== 'woman_demo') {
+        void liveAvatar.stop()
+        ui.avatarFrame?.classList.remove('liveavatar-active')
+      }
       if (!liveAvatar.isConnected) {
         video.setPersona(persona.videoDir, persona.videoDir)
         video.setState('IDLE')
@@ -682,7 +692,26 @@ export function createController(ui: UI) {
       : null
   }
 
-  function applyPlaybackState(data: LLMResponse) {
+  function applyNonLivePlayback(data: LLMResponse, stateDesc: string) {
+    const videoState = data.video_state || ''
+    if (videoState) {
+      updateStatus(ui, 'speaking…', 'speaking', stateDesc)
+      video.setState(videoState)
+    }
+    if (data.tts_text) {
+      tts.stream(
+        data.tts_text,
+        () => {},
+        (pcm: PCMChunk) => audio.enqueuePCM(pcm),
+        data.tts_voice_type
+      )
+      return
+    }
+    video.setState('IDLE')
+    updateStatus(ui, 'idle', 'idle', stateDesc)
+  }
+
+  async function applyPlaybackState(data: LLMResponse) {
     const persona = personaMap.get(currentPersonaId)
     const videoState = data.video_state || ''
     const stateDesc = (videoState && persona?.stateDescriptions[videoState])
@@ -692,33 +721,36 @@ export function createController(ui: UI) {
       ui.badgeText.textContent = '导览状态'
     }
 
-    if (videoState && !liveAvatar.isConnected) {
-      updateStatus(ui, 'speaking…', 'speaking', stateDesc)
-      video.setState(videoState)
-    }
-
     if (data.tts_text) {
-      if (liveAvatar.isConnected && liveAvatar.speak(data.tts_text)) {
-        updateStatus(ui, 'speaking…', 'speaking', '实时数字人正在讲解')
-        return
+      if (liveAvatar.isConnected && currentPersonaId === 'woman_demo') {
+        try {
+          const sent = await liveAvatar.speak(
+            data.tts_text,
+            videoState || 'IDLE',
+            data.tts_voice_type,
+            currentPersonaId
+          )
+          if (sent) {
+            updateStatus(ui, 'speaking…', 'speaking', '实时口型正在讲解')
+            return
+          }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          if (ui.liveAvatarStatus) ui.liveAvatarStatus.textContent = `已回退：${message.slice(0, 34)}`
+          ui.avatarFrame?.classList.remove('liveavatar-active')
+          await liveAvatar.stop().catch(() => {})
+        }
       }
 
-      tts.stream(
-        data.tts_text,
-        () => {},
-        (pcm: PCMChunk) => audio.enqueuePCM(pcm),
-        data.tts_voice_type
-      )
+      applyNonLivePlayback(data, stateDesc)
       return
     }
 
-    if (!liveAvatar.isConnected) {
-      video.setState('IDLE')
-    }
+    if (!liveAvatar.isConnected) video.setState('IDLE')
     updateStatus(ui, 'idle', 'idle', stateDesc)
   }
 
-  function applyLLMResponse(data: LLMResponse) {
+  async function applyLLMResponse(data: LLMResponse) {
     applyResponsePersonaMedia(data)
 
     if (data.tts_text) {
@@ -739,7 +771,7 @@ export function createController(ui: UI) {
     if (ui.contextHint) ui.contextHint.style.display = 'none'
     renderSuggestionButtons(data.suggested_actions || [])
     showProgressProofIfNeeded(data)
-    applyPlaybackState(data)
+    await applyPlaybackState(data)
   }
 
   function handleGuidePlaybackFinished() {
@@ -778,7 +810,7 @@ export function createController(ui: UI) {
 
     try {
       const data = await requestLLM(text, source)
-      applyLLMResponse(data)
+      await applyLLMResponse(data)
     } catch {
       updateStatus(ui, 'idle', 'idle', '等待你的下一步')
       video.setState('IDLE')

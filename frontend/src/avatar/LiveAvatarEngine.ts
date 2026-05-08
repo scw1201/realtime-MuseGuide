@@ -1,11 +1,4 @@
-import {
-  AgentEventsEnum,
-  LiveAvatarSession,
-  SessionDisconnectReason,
-  SessionEvent,
-  SessionState,
-} from '@heygen/liveavatar-web-sdk'
-import { API_BASE } from '../net/runtime'
+import { LIVETALKING_BASE_URL } from '../net/runtime'
 
 type LiveAvatarCallbacks = {
   onState?: (state: string) => void
@@ -16,10 +9,14 @@ type LiveAvatarCallbacks = {
   onLog?: (entry: LiveAvatarLogEntry) => void
 }
 
-type TokenResponse = {
-  session_token?: string
-  token?: string
-  session_id?: string
+type LiveTalkingAnswer = RTCSessionDescriptionInit & {
+  sessionid?: string
+}
+
+type LiveTalkingJson = {
+  code?: number
+  msg?: string
+  data?: unknown
 }
 
 export type LiveAvatarLogEntry = {
@@ -31,14 +28,17 @@ export type LiveAvatarLogEntry = {
 export class LiveAvatarEngine {
   private video: HTMLVideoElement
   private callbacks: LiveAvatarCallbacks
-  private session: LiveAvatarSession | null = null
-  private keepAliveTimer: number | null = null
+  private baseUrl: string
+  private pc: RTCPeerConnection | null = null
+  private sessionId = ''
   private connected = false
   private starting = false
+  private speakingPollTimer: number | null = null
 
   constructor(video: HTMLVideoElement, callbacks: LiveAvatarCallbacks = {}) {
     this.video = video
     this.callbacks = callbacks
+    this.baseUrl = LIVETALKING_BASE_URL.replace(/\/$/, '')
   }
 
   get isConnected() {
@@ -49,57 +49,65 @@ export class LiveAvatarEngine {
     return this.starting
   }
 
-  async start() {
+  async start(personaId = 'woman_demo') {
     if (this.connected || this.starting) return
     this.starting = true
     this.callbacks.onState?.('CONNECTING')
-    this.log('start_requested')
+    this.log('start_requested', personaId)
 
     try {
-      const { token, sessionId } = await this.fetchSessionToken()
-      this.log('token_created', sessionId ? `session_id=${sessionId}` : '')
-      const session = new LiveAvatarSession(token, {
-        voiceChat: false,
-      })
+      const pc = new RTCPeerConnection({ sdpSemantics: 'unified-plan' } as RTCConfiguration)
+      this.pc = pc
 
-      session.on(SessionEvent.SESSION_STATE_CHANGED, (state: SessionState) => {
-        this.log('state_changed', state)
-        this.callbacks.onState?.(state)
-      })
-
-      session.on(SessionEvent.SESSION_STREAM_READY, () => {
-        this.log('stream_ready')
-        session.attach(this.video)
+      pc.addTransceiver('video', { direction: 'recvonly' })
+      pc.addTransceiver('audio', { direction: 'recvonly' })
+      pc.addEventListener('track', (event) => {
+        const [stream] = event.streams
+        if (!stream) return
+        this.video.srcObject = stream
         this.video.muted = false
+        this.video.playsInline = true
+        this.video.autoplay = true
         this.video.play().catch(() => {})
         this.callbacks.onStreamReady?.()
       })
-
-      session.on(SessionEvent.SESSION_DISCONNECTED, (reason: SessionDisconnectReason) => {
-        this.log('disconnected', reason || 'UNKNOWN_REASON')
-        this.connected = false
-        this.stopKeepAlive()
-        this.callbacks.onState?.('DISCONNECTED')
+      pc.addEventListener('connectionstatechange', () => {
+        this.log('connection_state', pc.connectionState)
+        if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+          this.callbacks.onState?.('DISCONNECTED')
+        }
       })
 
-      session.on(AgentEventsEnum.AVATAR_SPEAK_STARTED, () => {
-        this.log('avatar_speak_started')
-        this.callbacks.onSpeakStart?.()
-      })
+      const offer = await pc.createOffer()
+      await pc.setLocalDescription(offer)
+      await this.waitForIceGathering(pc)
 
-      session.on(AgentEventsEnum.AVATAR_SPEAK_ENDED, () => {
-        this.log('avatar_speak_ended')
-        this.callbacks.onSpeakEnd?.()
-      })
+      const local = pc.localDescription
+      if (!local) throw new Error('LiveTalking local offer is empty')
 
-      await session.start()
-      this.session = session
+      const res = await fetch(`${this.baseUrl}/offer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sdp: local.sdp,
+          type: local.type,
+          avatar: `${personaId}_IDLE`,
+        }),
+      })
+      if (!res.ok) throw new Error(`LiveTalking /offer failed with ${res.status}`)
+
+      const answer = (await res.json()) as LiveTalkingAnswer
+      if (!answer.sdp || !answer.type || !answer.sessionid) {
+        throw new Error('LiveTalking /offer did not return sdp/type/sessionid')
+      }
+      this.sessionId = String(answer.sessionid)
+      await pc.setRemoteDescription(answer)
+
       this.connected = true
-      this.startKeepAlive()
-      this.log('session_started')
       this.callbacks.onState?.('CONNECTED')
+      this.log('session_started', `sessionid=${this.sessionId}`)
     } catch (err) {
-      this.connected = false
+      await this.stop()
       const message = err instanceof Error ? err.message : String(err)
       this.log('start_failed', message)
       this.callbacks.onError?.(message)
@@ -111,62 +119,110 @@ export class LiveAvatarEngine {
 
   async stop() {
     this.log('stop_requested')
-    this.stopKeepAlive()
-    const session = this.session
-    this.session = null
+    this.stopSpeakingPoll()
     this.connected = false
-    if (!session) return
-    await session.stop().catch(() => {})
-    this.log('session_stopped')
+    this.sessionId = ''
+    const pc = this.pc
+    this.pc = null
+    if (pc) pc.close()
+    this.video.removeAttribute('srcObject')
+    this.video.srcObject = null
     this.callbacks.onState?.('DISCONNECTED')
   }
 
-  speak(text: string) {
+  async speak(text: string, videoState = 'IDLE', voiceType?: string, personaId = 'woman_demo') {
     const clean = text.trim()
-    if (!clean || !this.session || !this.connected) return false
-    this.log('speak_text', `${clean.length} chars`)
-    this.session.repeat(clean)
+    if (!clean || !this.connected || !this.sessionId) return false
+    this.log('speak_text', `${videoState} · ${clean.length} chars`)
+    this.callbacks.onSpeakStart?.()
+
+    const res = await fetch(`${this.baseUrl}/museguide/speak`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionid: this.sessionId,
+        text: clean,
+        video_state: videoState || 'IDLE',
+        persona_id: personaId || 'woman_demo',
+        interrupt: true,
+        tts: voiceType ? { ref_file: voiceType } : undefined,
+      }),
+    })
+    if (!res.ok) throw new Error(`LiveTalking /museguide/speak failed with ${res.status}`)
+
+    const data = (await res.json()) as LiveTalkingJson
+    if (typeof data.code === 'number' && data.code !== 0) {
+      throw new Error(data.msg || 'LiveTalking speak failed')
+    }
+    this.startSpeakingPoll()
     return true
   }
 
-  interrupt() {
-    if (!this.session || !this.connected) return
+  async interrupt() {
+    if (!this.connected || !this.sessionId) return
     this.log('interrupt')
-    this.session.interrupt()
-  }
-
-  private async fetchSessionToken() {
-    const res = await fetch(`${API_BASE}/api/liveavatar/token`, {
+    await fetch(`${this.baseUrl}/interrupt_talk`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ sessionid: this.sessionId }),
+    }).catch(() => {})
+    this.stopSpeakingPoll()
+  }
+
+  private waitForIceGathering(pc: RTCPeerConnection) {
+    return new Promise<void>((resolve) => {
+      if (pc.iceGatheringState === 'complete') {
+        resolve()
+        return
+      }
+      const checkState = () => {
+        if (pc.iceGatheringState !== 'complete') return
+        pc.removeEventListener('icegatheringstatechange', checkState)
+        resolve()
+      }
+      pc.addEventListener('icegatheringstatechange', checkState)
     })
-    if (!res.ok) {
-      const detail = await res.text().catch(() => '')
-      throw new Error(detail || `LiveAvatar token failed with ${res.status}`)
-    }
-    const data = (await res.json()) as TokenResponse
-    const token = data.session_token || data.token
-    if (!token) {
-      throw new Error('LiveAvatar token response did not include session_token')
-    }
-    return { token, sessionId: data.session_id || '' }
   }
 
-  private startKeepAlive() {
-    this.stopKeepAlive()
-    this.keepAliveTimer = window.setInterval(() => {
-      if (!this.session || !this.connected) return
-      this.session.keepAlive()
-        .then(() => this.log('keep_alive_ok'))
-        .catch((err) => this.log('keep_alive_failed', err instanceof Error ? err.message : String(err)))
-    }, 30000)
+  private startSpeakingPoll() {
+    this.stopSpeakingPoll()
+    let sawSpeaking = false
+    let idleTicks = 0
+    const startedAt = Date.now()
+    this.speakingPollTimer = window.setInterval(async () => {
+      if (!this.connected || !this.sessionId) {
+        this.stopSpeakingPoll()
+        return
+      }
+      try {
+        const res = await fetch(`${this.baseUrl}/is_speaking`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionid: this.sessionId }),
+        })
+        const data = (await res.json()) as LiveTalkingJson
+        const speaking = Boolean(data.data)
+        if (speaking) {
+          sawSpeaking = true
+          idleTicks = 0
+          return
+        }
+        idleTicks += 1
+        const timedOutIdle = !sawSpeaking && Date.now() - startedAt > 8000
+        if ((sawSpeaking && idleTicks >= 2) || timedOutIdle) {
+          this.stopSpeakingPoll()
+          this.callbacks.onSpeakEnd?.()
+        }
+      } catch (err) {
+        this.log('speaking_poll_failed', err instanceof Error ? err.message : String(err))
+      }
+    }, 500)
   }
 
-  private stopKeepAlive() {
-    if (!this.keepAliveTimer) return
-    window.clearInterval(this.keepAliveTimer)
-    this.keepAliveTimer = null
+  private stopSpeakingPoll() {
+    if (!this.speakingPollTimer) return
+    window.clearInterval(this.speakingPollTimer)
+    this.speakingPollTimer = null
   }
 
   private log(event: string, detail = '') {
@@ -175,7 +231,7 @@ export class LiveAvatarEngine {
       event,
       detail,
     }
-    console.info('[LiveAvatar]', entry)
+    console.info('[LiveTalking]', entry)
     this.callbacks.onLog?.(entry)
   }
 }
