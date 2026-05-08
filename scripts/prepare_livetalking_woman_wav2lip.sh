@@ -5,18 +5,26 @@ cd "$(dirname "$0")/.."
 
 PY_BIN="${PY_BIN:-python}"
 PERSONA_ID="${PERSONA_ID:-woman_demo}"
-VIDEO_ROOT="${VIDEO_ROOT:-frontend/public/videos/${PERSONA_ID}}"
+VIDEO_ROOT="${VIDEO_ROOT:-livetalking/test_videos}"
 LIVETALKING_ROOT="${LIVETALKING_ROOT:-livetalking}"
 FACE_DET_BATCH_SIZE="${FACE_DET_BATCH_SIZE:-8}"
+IMG_SIZE="${IMG_SIZE:-256}"
+ALIGNED_WIDTH="${ALIGNED_WIDTH:-1176}"
+ALIGNED_HEIGHT="${ALIGNED_HEIGHT:-1764}"
+ALIGNED_FPS="${ALIGNED_FPS:-25}"
+ALIGNED_ROOT="${ALIGNED_ROOT:-${LIVETALKING_ROOT}/data/museguide_aligned_videos/${PERSONA_ID}}"
+FORCE_REBUILD="${FORCE_REBUILD:-0}"
 
-states=(
-  IDLE
-  LISTENING
-  GREETING_SELF
-  EXPLAIN_DETAILED
-  POINTING_DIRECTION
-  FOCUS_EXHIBIT
-)
+states=(IDLE GREETING_SELF FOCUS_EXHIBIT)
+
+source_for_state() {
+  case "$1" in
+    IDLE) echo "${VIDEO_ROOT}/idle.mp4" ;;
+    GREETING_SELF) echo "${VIDEO_ROOT}/woman_demo_GREETING_SELF.mp4" ;;
+    FOCUS_EXHIBIT) echo "${VIDEO_ROOT}/woman_demo_FOCUS_EXHIBIT.mp4" ;;
+    *) echo "" ;;
+  esac
+}
 
 echo "Preparing LiveTalking Wav2Lip assets for ${PERSONA_ID}"
 echo "If dependency download is slow, enable your shell proxy first with: proxy_on"
@@ -42,18 +50,61 @@ if [ ! -f "${LIVETALKING_ROOT}/wav2lip/face_detection/detection/sfd/s3fd.pth" ];
 fi
 
 for state in "${states[@]}"; do
-  video_path="${VIDEO_ROOT}/${PERSONA_ID}_${state}.mp4"
+  source_video_path="$(source_for_state "${state}")"
+  video_path="${ALIGNED_ROOT}/${PERSONA_ID}_${state}.mp4"
   avatar_id="${PERSONA_ID}_${state}"
   avatar_dir="${LIVETALKING_ROOT}/data/avatars/${avatar_id}"
 
-  if [ ! -f "${video_path}" ]; then
-    echo "Skip ${state}: ${video_path} not found"
+  if [ ! -f "${source_video_path}" ]; then
+    echo "Skip ${state}: ${source_video_path} not found"
     continue
+  fi
+
+  if [ "${FORCE_REBUILD}" = "1" ] && [ -d "${avatar_dir}" ]; then
+    echo "Rebuilding ${avatar_id}: removing previous generated avatar"
+    rm -rf "${avatar_dir}"
   fi
 
   if [ -f "${avatar_dir}/coords.pkl" ]; then
     echo "Skip ${avatar_id}: already prepared"
     continue
+  fi
+
+  mkdir -p "${ALIGNED_ROOT}"
+  if [ "${FORCE_REBUILD}" = "1" ] && [ -f "${video_path}" ]; then
+    echo "Rebuilding aligned video: ${video_path}"
+    rm -f "${video_path}"
+  fi
+
+  if [ ! -f "${video_path}" ]; then
+    echo "Aligning ${source_video_path} -> ${video_path}"
+    "${PY_BIN}" - "${source_video_path}" "${video_path}" "${ALIGNED_WIDTH}" "${ALIGNED_HEIGHT}" "${ALIGNED_FPS}" <<'PY'
+from pathlib import Path
+import sys
+import cv2
+
+src, dst, width, height, fps = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), float(sys.argv[5])
+Path(dst).parent.mkdir(parents=True, exist_ok=True)
+cap = cv2.VideoCapture(src)
+if not cap.isOpened():
+    raise SystemExit(f"Cannot open video: {src}")
+fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+writer = cv2.VideoWriter(dst, fourcc, fps, (width, height))
+if not writer.isOpened():
+    raise SystemExit(f"Cannot create video: {dst}")
+while True:
+    ok, frame = cap.read()
+    if not ok:
+        break
+    src_h, src_w = frame.shape[:2]
+    scale = max(width / src_w, height / src_h)
+    resized = cv2.resize(frame, (round(src_w * scale), round(src_h * scale)), interpolation=cv2.INTER_AREA)
+    y0 = max((resized.shape[0] - height) // 2, 0)
+    x0 = max((resized.shape[1] - width) // 2, 0)
+    writer.write(resized[y0:y0 + height, x0:x0 + width])
+cap.release()
+writer.release()
+PY
   fi
 
   echo "Generating ${avatar_id} from ${video_path}"
@@ -62,9 +113,9 @@ for state in "${states[@]}"; do
     "${PY_BIN}" -m avatars.wav2lip.genavatar \
       --video_path "../${video_path}" \
       --avatar_id "${avatar_id}" \
-      --img_size 96 \
+      --img_size "${IMG_SIZE}" \
       --face_det_batch_size "${FACE_DET_BATCH_SIZE}"
   )
 done
 
-echo "LiveTalking Wav2Lip woman assets are ready."
+echo "LiveTalking Wav2Lip MuseGuide test-video assets are ready."
