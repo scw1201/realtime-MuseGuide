@@ -1,0 +1,14 @@
+name: museguide
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - fastapi==0.135.3
+      - uvicorn==0.44.0
+      - websockets==16.0
+      - PyYAML==6.0.3
+      - python-docx==1.2.0
+      - httpx
+      - volcengine-python-sdk==5.0.23

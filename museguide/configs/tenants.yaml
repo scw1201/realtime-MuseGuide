@@ -1,0 +1,11 @@
+default_tenant: museum_demo
+tenants:
+  museum_demo:
+    name: 博物馆数字人智能导览
+    data_dir: museum_demo
+    domains:
+      - museguide.cn
+      - www.museguide.cn
+      - 47.98.149.254
+      - localhost
+      - 127.0.0.1

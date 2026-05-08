@@ -1,0 +1,830 @@
+// frontend/src/app/controller.ts
+
+import { AudioEngine } from '../audio/AudioEngine'
+import { LiveAvatarEngine, type LiveAvatarLogEntry } from '../avatar/LiveAvatarEngine'
+import { TTSClient } from '../net/TTSClient'
+import { VideoEngine } from '../video/VideoEngine'
+import {
+  updateStatus,
+  showCaption,
+  hideCaption,
+  renderSuggestedActions,
+  showProgressProof,
+  hideProgressProof,
+  flashContextField,
+  announceStage,
+} from './ui'
+import type { getUI } from './ui'
+import { PERSONAS, type PersonaInfo } from './personas'
+import type { PCMChunk, LLMResponse, SuggestedAction, InputSource } from '../net/types'
+import { API_BASE } from '../net/runtime'
+
+type UI = ReturnType<typeof getUI>
+
+type DomainExhibit = {
+  id: string
+  name: string
+  image?: string
+}
+
+type DomainZone = {
+  id: string
+  name: string
+  exhibits: DomainExhibit[]
+  previewImage?: string
+}
+
+const PROGRESS_ZONE_IDS = new Set([
+  'zone_chinese_origins',
+  'zone_calligraphy_painting',
+  'zone_world_classics',
+  'zone_children_exploration',
+])
+
+export function createController(ui: UI) {
+  const audio = new AudioEngine(24000)
+  const tts = new TTSClient()
+  const video = new VideoEngine(ui.video)
+  const liveAvatarLogs: LiveAvatarLogEntry[] = []
+  const liveAvatar = new LiveAvatarEngine(ui.video, {
+    onState: (state) => {
+      if (ui.liveAvatarStatus) ui.liveAvatarStatus.textContent = formatLiveAvatarState(state)
+      updateLiveAvatarToggle()
+    },
+    onStreamReady: () => {
+      if (ui.avatarFrame) ui.avatarFrame.classList.add('liveavatar-active')
+    },
+    onSpeakStart: () => {
+      updateStatus(ui, 'speaking…', 'speaking', '实时数字人正在讲解')
+    },
+    onSpeakEnd: () => {
+      handleGuidePlaybackFinished()
+    },
+    onError: (message) => {
+      if (ui.liveAvatarStatus) ui.liveAvatarStatus.textContent = `连接失败：${message.slice(0, 42)}`
+      if (ui.avatarFrame) ui.avatarFrame.classList.remove('liveavatar-active')
+    },
+    onLog: (entry) => {
+      liveAvatarLogs.push(entry)
+      if (liveAvatarLogs.length > 20) liveAvatarLogs.shift()
+      renderLiveAvatarLog()
+    },
+  })
+  const zoneLocationMap = new Map<string, { floor?: string; area?: string }>()
+  const zoneBgMap = new Map<string, string>()
+  const zoneNameToId = new Map<string, string>()
+  const exhibitNameToId = new Map<string, string>()
+  const exhibitIdToImage = new Map<string, string>()
+  const zoneIdToPreviewImage = new Map<string, string>()
+  const progressZones: DomainZone[] = []
+  const visitedZoneIds = new Set<string>()
+  const visitedExhibitIds = new Set<string>()
+  let currentZoneId = ''
+  let currentExhibitId = ''
+  let currentBgId = 'zone_front_desk'
+  let bgTimer: number | null = null
+  let progressProofTimer: number | null = null
+  let autoTimer: number | null = null
+  let pendingAutoText: string | null = null
+  const autoAdvanceEnabled = false
+  const liveAvatarPreconnectEnabled = true
+  let guideReplyCount = 0
+  let lastGuideStage = ''
+  let lastZoneId = ''
+
+  const personaMap = new Map<string, PersonaInfo>(
+    PERSONAS.map(p => [p.id, p])
+  )
+  const startGuideTextMap = new Map<string, string>(
+    PERSONAS.map(p => [p.id, p.startGuideText || '开始导览'])
+  )
+
+  let currentPersonaId = 'woman_demo'
+  let hasConversationStarted = false
+  const sessionId =
+    globalThis.crypto?.randomUUID?.() ||
+    `sid_${Date.now()}_${Math.random().toString(16).slice(2)}`
+
+  function formatLiveAvatarState(state: string) {
+    const value = String(state || '').toUpperCase()
+    if (value === 'CONNECTED') return '已连接'
+    if (value === 'CONNECTING') return '连接中…'
+    if (value === 'DISCONNECTING') return '断开中…'
+    if (value === 'DISCONNECTED') return '已断开'
+    if (value === 'INACTIVE') return '未连接'
+    return value || '未连接'
+  }
+
+  function updateLiveAvatarToggle() {
+    if (!ui.liveAvatarToggle) return
+    if (liveAvatar.isStarting) {
+      ui.liveAvatarToggle.textContent = '正在连接…'
+      ui.liveAvatarToggle.disabled = true
+      return
+    }
+    ui.liveAvatarToggle.disabled = false
+    ui.liveAvatarToggle.textContent = liveAvatar.isConnected
+      ? '关闭实时数字人'
+      : '接入实时数字人'
+  }
+
+  function renderLiveAvatarLog() {
+    if (!ui.liveAvatarLog) return
+    ui.liveAvatarLog.innerHTML = liveAvatarLogs
+      .slice()
+      .reverse()
+      .map(item => `
+        <div class="liveavatar-log-line">
+          <span>${item.ts}</span>
+          <strong>${item.event}</strong>
+          ${item.detail ? `<em>${item.detail}</em>` : ''}
+        </div>
+      `)
+      .join('')
+  }
+
+  async function toggleLiveAvatar() {
+    if (!ui.liveAvatarStatus) return
+    try {
+      if (liveAvatar.isConnected) {
+        await liveAvatar.stop()
+        ui.avatarFrame?.classList.remove('liveavatar-active')
+        const persona = personaMap.get(currentPersonaId)
+        if (persona) {
+          video.setPersona(persona.videoDir, persona.videoDir)
+          video.setState('IDLE')
+        }
+        ui.liveAvatarStatus.textContent = '已断开'
+        updateLiveAvatarToggle()
+        return
+      }
+
+      ui.liveAvatarStatus.textContent = '连接中…'
+      updateLiveAvatarToggle()
+      await liveAvatar.start()
+      ui.liveAvatarStatus.textContent = '已连接'
+      updateLiveAvatarToggle()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      ui.liveAvatarStatus.textContent = `连接失败：${message.slice(0, 42)}`
+      updateLiveAvatarToggle()
+    }
+  }
+
+  function preconnectLiveAvatar() {
+    if (!liveAvatarPreconnectEnabled || !ui.liveAvatarStatus) return
+    ui.liveAvatarStatus.textContent = '准备中…'
+    updateLiveAvatarToggle()
+    window.setTimeout(() => {
+      if (liveAvatar.isConnected || liveAvatar.isStarting) return
+      toggleLiveAvatar()
+    }, 900)
+  }
+
+  function renderPersonaList() {
+    if (!ui.personaList) return
+    ui.personaList.innerHTML = PERSONAS.map(p => `
+      <button class="persona-item" data-id="${p.id}">
+        <img src="${p.avatar}" class="persona-item-avatar" />
+        <div class="persona-item-meta">
+          <div class="persona-item-name">${p.name}</div>
+          <div class="persona-item-role">${p.role}</div>
+        </div>
+      </button>
+    `).join('')
+
+    ui.personaList
+      .querySelectorAll<HTMLButtonElement>('.persona-item')
+      .forEach((btn: HTMLButtonElement) => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id
+          if (!id) return
+          setPersona(id)
+        })
+      })
+  }
+
+  function trimContext(text: string, max = 36) {
+    if (!text) return '—'
+    const clean = text.replace(/\s+/g, ' ').trim()
+    if (clean.length <= max) return clean
+    return `${clean.slice(0, max)}…`
+  }
+
+  function formatZoneDisplay(
+    zoneName: string,
+    venue?: string,
+    floor?: string,
+    area?: string
+  ) {
+    const name = zoneName || '展馆前台'
+    const loc = zoneLocationMap.get(name) || {}
+    const resolvedVenue = venue || '中华世纪坛'
+    const resolvedFloor = floor || loc.floor || ''
+    const resolvedArea = area || loc.area || ''
+    const parts = [resolvedVenue, resolvedFloor, resolvedArea, name].filter(Boolean)
+    return parts.join(' · ')
+  }
+
+  function floorKeyFromLabel(label: string) {
+    const value = (label || '').trim()
+    if (!value) return ''
+    if (value.includes('地下二层') || value === 'B2') return 'b2'
+    if (value.includes('地下三层') || value === 'B3') return 'b3'
+    if (value.includes('地下一层') || value === 'B1') return 'b1'
+    if (value.includes('展馆二层') || value === 'F2' || value === '2F') return 'f2'
+    if (value.includes('展馆一层') || value === 'F1' || value === '1F') return 'f1'
+    return ''
+  }
+
+  function updateContextMap(floorLabel: string) {
+    if (!ui.contextMap) return
+    const key = floorKeyFromLabel(floorLabel)
+    if (!key) {
+      ui.contextMap.style.display = 'none'
+      return
+    }
+    ui.contextMap.src = `/imgs/floor/${key}.png`
+    ui.contextMap.style.display = 'block'
+  }
+
+  async function loadZoneFloors() {
+    try {
+      const res = await fetch(`${API_BASE}/api/domain_prior`)
+      const data = await res.json()
+      zoneLocationMap.clear()
+      zoneBgMap.clear()
+      zoneNameToId.clear()
+      exhibitNameToId.clear()
+      exhibitIdToImage.clear()
+      zoneIdToPreviewImage.clear()
+      progressZones.length = 0
+      for (const zone of data.zones || []) {
+        const loc = zone.location || {}
+        const floor = loc.floor
+        const area = loc.area
+        const name = zone.name
+        const id = zone.id
+        if (name) {
+          zoneLocationMap.set(name, { floor, area })
+          if (id) {
+            zoneNameToId.set(String(name), String(id))
+          }
+          if (String(name).includes('前台')) {
+            zoneLocationMap.set('展馆前台', { floor, area })
+            zoneBgMap.set('展馆前台', 'zone_front_desk')
+          }
+          if (id) {
+            zoneBgMap.set(name, id)
+          }
+        }
+        if (id) {
+          zoneBgMap.set(id, id)
+          zoneIdToPreviewImage.set(String(id), `/bgs/${id}.png`)
+        }
+        if (!PROGRESS_ZONE_IDS.has(String(id || ''))) {
+          continue
+        }
+        const exhibits: DomainExhibit[] = (zone.exhibits || []).map((exhibit: any) => {
+          const exhibitId = String(exhibit.id || '')
+          const exhibitName = String(exhibit.name || '')
+          const exhibitImage = String(exhibit.image || '')
+          if (exhibitName && exhibitId) {
+            exhibitNameToId.set(exhibitName, exhibitId)
+          }
+          if (exhibitId && exhibitImage) {
+            exhibitIdToImage.set(exhibitId, exhibitImage)
+          }
+          return {
+            id: exhibitId,
+            name: exhibitName,
+            image: exhibitImage,
+          }
+        })
+        progressZones.push({
+          id: String(id || ''),
+          name: String(name || ''),
+          exhibits,
+          previewImage: id ? `/bgs/${id}.png` : '',
+        })
+      }
+      renderTourProgress()
+      renderProgressPreview()
+    } catch {
+      // ignore failures; fall back to zone name only
+    }
+  }
+
+  function renderTourProgress() {
+    if (!ui.progressRoot) return
+    ui.progressRoot.innerHTML = progressZones.map(zone => {
+      const zoneVisited = visitedZoneIds.has(zone.id)
+      const zoneCurrent = currentZoneId === zone.id
+      const exhibitItems = zone.exhibits.map(exhibit => {
+        const visited = visitedExhibitIds.has(exhibit.id)
+        const current = currentExhibitId === exhibit.id
+        return `
+          <div class="progress-exhibit ${current ? 'current' : visited ? 'visited' : 'pending'}">
+            <span class="progress-dot"></span>
+            <span class="progress-name">${exhibit.name}</span>
+          </div>
+        `
+      }).join('')
+
+      return `
+        <section class="progress-zone ${zoneCurrent ? 'current' : zoneVisited ? 'visited' : 'pending'}">
+          <div class="progress-zone-header">
+            <span class="progress-zone-dot"></span>
+            <span class="progress-zone-name">${zone.name}</span>
+          </div>
+          <div class="progress-exhibit-list">
+            ${exhibitItems}
+          </div>
+        </section>
+      `
+    }).join('')
+  }
+
+  function resetTourProgress() {
+    visitedZoneIds.clear()
+    visitedExhibitIds.clear()
+    currentZoneId = ''
+    currentExhibitId = ''
+    lastZoneId = ''
+    renderTourProgress()
+    renderProgressPreview()
+  }
+
+  function updateTourProgress(zoneName?: string, exhibitName?: string) {
+    const zoneId = zoneName ? zoneNameToId.get(zoneName) : ''
+    const exhibitId = exhibitName ? exhibitNameToId.get(exhibitName) : ''
+    currentZoneId = zoneId || ''
+    currentExhibitId = exhibitId || ''
+    if (zoneId) {
+      visitedZoneIds.add(zoneId)
+    }
+    if (exhibitId) {
+      visitedExhibitIds.add(exhibitId)
+    }
+    renderTourProgress()
+    renderProgressPreview()
+  }
+
+  function syncTourProgressFromResponse(data: LLMResponse) {
+    const visitedZoneNames = data.visited_zones || []
+    const visitedExhibitNames = data.visited_exhibits || []
+    visitedZoneIds.clear()
+    visitedExhibitIds.clear()
+
+    for (const zoneName of visitedZoneNames) {
+      const zoneId = zoneNameToId.get(zoneName)
+      if (zoneId) visitedZoneIds.add(zoneId)
+    }
+    for (const exhibitName of visitedExhibitNames) {
+      const exhibitId = exhibitNameToId.get(exhibitName)
+      if (exhibitId) visitedExhibitIds.add(exhibitId)
+    }
+
+    const currentZoneName = data.current_zone || data.guide_zone || ''
+    const currentExhibitName = data.current_exhibit || data.focus_exhibit || ''
+    currentZoneId = currentZoneName ? (zoneNameToId.get(currentZoneName) || '') : ''
+    currentExhibitId = currentExhibitName ? (exhibitNameToId.get(currentExhibitName) || '') : ''
+
+    if (!visitedZoneNames.length && !visitedExhibitNames.length) {
+      updateTourProgress(currentZoneName, currentExhibitName)
+      return
+    }
+    if (currentZoneId) visitedZoneIds.add(currentZoneId)
+    if (currentExhibitId) visitedExhibitIds.add(currentExhibitId)
+    renderTourProgress()
+    renderProgressPreview()
+  }
+
+  function renderProgressPreview() {
+    if (!ui.progressPreviewTitle || !ui.progressPreviewImage || !ui.progressPreviewEmpty) return
+
+    const exhibitImage = currentExhibitId ? exhibitIdToImage.get(currentExhibitId) || '' : ''
+    const zoneImage = currentZoneId ? zoneIdToPreviewImage.get(currentZoneId) || '' : ''
+    const previewImage = currentExhibitId ? exhibitImage : zoneImage
+
+    const currentZoneName =
+      progressZones.find(zone => zone.id === currentZoneId)?.name || '尚未进入展区'
+    const currentExhibitName =
+      progressZones
+        .flatMap(zone => zone.exhibits)
+        .find(exhibit => exhibit.id === currentExhibitId)?.name || ''
+
+    ui.progressPreviewTitle.textContent = currentExhibitName || currentZoneName
+
+    if (previewImage) {
+      ui.progressPreviewImage.src = previewImage
+      ui.progressPreviewImage.classList.remove('hidden')
+      ui.progressPreviewEmpty.classList.add('hidden')
+      return
+    }
+
+    ui.progressPreviewImage.removeAttribute('src')
+    ui.progressPreviewImage.classList.add('hidden')
+    ui.progressPreviewEmpty.classList.remove('hidden')
+  }
+
+  function getTotalExhibitsCount() {
+    return progressZones.reduce((total, zone) => total + zone.exhibits.length, 0)
+  }
+
+  function resolveGuideTaskLabel(data: LLMResponse) {
+    const stage = String(data.guide_stage || '').trim()
+    const videoState = String(data.video_state || '').trim()
+    if (stage === '引路阶段' || videoState === 'POINTING_DIRECTION') return '正在引路'
+    if (stage === '展厅介绍') return '正在展厅概览'
+    if (stage === '展品介绍') return '正在讲解展品'
+    if (stage === '展品聚焦' || videoState === 'FOCUS_EXHIBIT') return '正在聚焦展品'
+    if (stage === '深入讲解') return '正在深入讲解'
+    return '等待你的下一步'
+  }
+
+  function showProgressProofIfNeeded(data: LLMResponse) {
+    const stage = String(data.guide_stage || '').trim()
+    const stageChanged = Boolean(stage && stage !== lastGuideStage)
+    const zoneChanged = Boolean(currentZoneId && currentZoneId !== lastZoneId)
+
+    if (stageChanged) lastGuideStage = stage
+    if (zoneChanged) lastZoneId = currentZoneId
+
+    guideReplyCount += 1
+    // Always show on zone entry; otherwise on stage change or every 3 replies
+    if (!zoneChanged && !stageChanged && guideReplyCount % 3 !== 0) return
+
+    const totalExhibits = getTotalExhibitsCount()
+    const visitedExhibits = visitedExhibitIds.size
+    const currentZoneName = data.current_zone || data.guide_zone || '展馆'
+    const nextAction = data.suggested_actions?.[0]?.label || ''
+
+    let message: string
+    if (zoneChanged) {
+      message = nextAction
+        ? `已进入「${currentZoneName}」· 建议：${nextAction}`
+        : `已进入「${currentZoneName}」`
+    } else {
+      const progressPart = totalExhibits > 0
+        ? `已看 ${visitedExhibits}/${totalExhibits} 件展品`
+        : '导览进行中'
+      message = nextAction
+        ? `${progressPart} · 建议：${nextAction}`
+        : progressPart
+    }
+
+    showProgressProof(ui, message)
+    if (progressProofTimer) window.clearTimeout(progressProofTimer)
+    progressProofTimer = window.setTimeout(() => {
+      hideProgressProof(ui)
+    }, 2500)
+  }
+
+  function updateStageBg(zoneKey: string) {
+    if (!ui.avatarFrame) return
+    const bgId = zoneBgMap.get(zoneKey || '') || 'zone_front_desk'
+    if (bgId === currentBgId) return
+    currentBgId = bgId
+    if (bgTimer) window.clearTimeout(bgTimer)
+    ui.avatarFrame.classList.add('bg-fade')
+    bgTimer = window.setTimeout(() => {
+      ui.avatarFrame.style.setProperty('--stage-bg', `url('/bgs/${bgId}.png')`)
+      ui.avatarFrame.classList.remove('bg-fade')
+    }, 180)
+  }
+
+  function setSidebarPanel(panel: 'personas' | 'progress') {
+    ui.personaTab?.classList.toggle('active', panel === 'personas')
+    ui.progressTab?.classList.toggle('active', panel === 'progress')
+    ui.personaSidebarPanel?.classList.toggle('active', panel === 'personas')
+    ui.progressSidebarPanel?.classList.toggle('active', panel === 'progress')
+  }
+
+  function setPersona(id: string) {
+    const persona = personaMap.get(id)
+    if (!persona) return
+
+    ui.stageCard?.classList.add('persona-changing')
+    ui.personaPanel?.classList.add('persona-changing')
+    ui.avatarFrame?.classList.add('persona-changing')
+
+    window.setTimeout(() => {
+      currentPersonaId = id
+      if (!liveAvatar.isConnected) {
+        video.setPersona(persona.videoDir, persona.videoDir)
+        video.setState('IDLE')
+      }
+
+      if (ui.personaAvatar) ui.personaAvatar.src = persona.avatar
+      if (ui.personaName) ui.personaName.textContent = persona.name
+      if (ui.personaRole) ui.personaRole.textContent = persona.role
+      if (ui.personaBio) ui.personaBio.textContent = persona.bio
+      if (ui.badgeDesc) ui.badgeDesc.textContent = persona.stateDescriptions['IDLE'] || '静待观众'
+      if (ui.badgeText) ui.badgeText.textContent = '导览状态'
+      if (ui.contextZone) {
+        ui.contextZone.textContent = formatZoneDisplay('展馆前台').replace(/^中华世纪坛 · /, '')
+      }
+      updateContextMap('展馆一层')
+      updateStageBg('展馆前台')
+      if (ui.contextStage) ui.contextStage.textContent = '准备阶段'
+      if (ui.contextAnchor) ui.contextAnchor.textContent = '—'
+      if (ui.contextPathHint) ui.contextPathHint.textContent = '—'
+      if (ui.contextHint) ui.contextHint.style.display = 'none'
+      if (ui.startGuideBtn) {
+        ui.startGuideBtn.textContent =
+          startGuideTextMap.get(id) || persona.startGuideText || '开始导览'
+      }
+      hasConversationStarted = false
+      guideReplyCount = 0
+      lastGuideStage = ''
+      lastZoneId = ''
+      if (progressProofTimer) window.clearTimeout(progressProofTimer)
+      hideProgressProof(ui)
+      resetTourProgress()
+      renderSuggestionButtons([])
+      setSidebarPanel('personas')
+
+      ui.personaList
+        ?.querySelectorAll<HTMLButtonElement>('.persona-item')
+        .forEach((item: HTMLButtonElement) => {
+          item.classList.toggle('active', item.getAttribute('data-id') === id)
+        })
+
+      window.setTimeout(() => {
+        ui.stageCard?.classList.remove('persona-changing')
+        ui.personaPanel?.classList.remove('persona-changing')
+        ui.avatarFrame?.classList.remove('persona-changing')
+      }, 320)
+    }, 240)
+  }
+
+  if (ui.personaToggle && ui.personaSidebar) {
+    ui.personaToggle.onclick = () => {
+      ui.personaSidebar.classList.toggle('collapsed')
+      ui.stageCard?.classList.toggle('sidebar-collapsed')
+    }
+  }
+
+  ui.personaTab?.addEventListener('click', () => setSidebarPanel('personas'))
+  ui.progressTab?.addEventListener('click', () => setSidebarPanel('progress'))
+  ui.liveAvatarToggle?.addEventListener('click', () => {
+    toggleLiveAvatar()
+  })
+  ui.liveAvatarLogToggle?.addEventListener('click', () => {
+    ui.liveAvatarLog?.classList.toggle('hidden')
+  })
+
+  renderPersonaList()
+  setSidebarPanel('personas')
+  setPersona(currentPersonaId)
+  loadZoneFloors()
+  loadPersonaCopy()
+  preconnectLiveAvatar()
+
+  function renderSuggestionButtons(actions: SuggestedAction[]) {
+    if (!hasConversationStarted && !actions.length) {
+      renderSuggestedActions(ui, [])
+      return
+    }
+    const persona = personaMap.get(currentPersonaId)
+    renderSuggestedActions(ui, actions, persona?.name)
+    ui.suggestionRow
+      ?.querySelectorAll<HTMLButtonElement>('.suggestion-chip')
+      .forEach((button: HTMLButtonElement) => {
+        button.addEventListener('click', () => {
+          const text = button.dataset.text?.trim()
+          if (!text) return
+          submitUserInput(text, 'chip')
+        })
+      })
+  }
+
+  function normalizeUserInput(text: string) {
+    return text.replace(/\s+/g, ' ').trim()
+  }
+
+  async function requestLLM(text: string, source: InputSource) {
+    const res = await fetch(`${API_BASE}/api/llm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        persona_id: currentPersonaId,
+        session_id: sessionId,
+        source,
+      }),
+    })
+
+    if (!res.ok) {
+      throw new Error(`LLM request failed with ${res.status}`)
+    }
+
+    return (await res.json()) as LLMResponse
+  }
+
+  function applyResponsePersonaMedia(data: LLMResponse) {
+    if (!data.video_dir && !data.video_prefix) return
+    const dir = data.video_dir || 'woman_demo'
+    const prefix = data.video_prefix || data.video_dir || dir
+    video.setPersona(dir, prefix)
+  }
+
+  function announceGuideStageChange(data: LLMResponse) {
+    const newStage = String(data.guide_stage || '').trim()
+    if (newStage && newStage !== lastGuideStage && hasConversationStarted) {
+      announceStage(newStage)
+    }
+  }
+
+  function applyConversationContext(data: LLMResponse) {
+    if (ui.contextZone) {
+      const zoneName = data.current_zone || data.guide_zone || '展馆前台'
+      const floor = data.guide_floor || ''
+      const area = data.guide_area || ''
+      const parts = [floor, area, zoneName].filter(Boolean)
+      const newText = trimContext(parts.join(' · '), 26)
+      if (ui.contextZone.textContent !== newText) {
+        ui.contextZone.textContent = newText
+        flashContextField(ui.contextZone)
+      }
+      updateContextMap(floor)
+      updateStageBg(zoneName)
+    }
+
+    if (ui.contextStage) {
+      const newText = trimContext(data.guide_stage || '准备阶段', 16)
+      if (ui.contextStage.textContent !== newText) {
+        ui.contextStage.textContent = newText
+        flashContextField(ui.contextStage)
+      }
+    }
+
+    if (ui.contextAnchor) {
+      const newText = trimContext(data.current_exhibit || data.focus_exhibit || '—', 20)
+      if (ui.contextAnchor.textContent !== newText) {
+        ui.contextAnchor.textContent = newText
+        flashContextField(ui.contextAnchor)
+      }
+    }
+  }
+
+  function applyAutoAdvanceFromResponse(data: LLMResponse) {
+    const nextStepType = String(data.next_step_type || '').trim()
+    const pendingActionText = String(data.pending_action_text || '').trim()
+    const firstAction = data.suggested_actions?.[0]
+    if (nextStepType !== 'ask_zone' && pendingActionText) {
+      pendingAutoText = pendingActionText
+      return
+    }
+    pendingAutoText = (firstAction && nextStepType !== 'ask_zone')
+      ? firstAction.text
+      : null
+  }
+
+  function applyPlaybackState(data: LLMResponse) {
+    const persona = personaMap.get(currentPersonaId)
+    const videoState = data.video_state || ''
+    const stateDesc = (videoState && persona?.stateDescriptions[videoState])
+      || resolveGuideTaskLabel(data)
+
+    if (ui.badgeText) {
+      ui.badgeText.textContent = '导览状态'
+    }
+
+    if (videoState && !liveAvatar.isConnected) {
+      updateStatus(ui, 'speaking…', 'speaking', stateDesc)
+      video.setState(videoState)
+    }
+
+    if (data.tts_text) {
+      if (liveAvatar.isConnected && liveAvatar.speak(data.tts_text)) {
+        updateStatus(ui, 'speaking…', 'speaking', '实时数字人正在讲解')
+        return
+      }
+
+      tts.stream(
+        data.tts_text,
+        () => {},
+        (pcm: PCMChunk) => audio.enqueuePCM(pcm),
+        data.tts_voice_type
+      )
+      return
+    }
+
+    if (!liveAvatar.isConnected) {
+      video.setState('IDLE')
+    }
+    updateStatus(ui, 'idle', 'idle', stateDesc)
+  }
+
+  function applyLLMResponse(data: LLMResponse) {
+    applyResponsePersonaMedia(data)
+
+    if (data.tts_text) {
+      showCaption(ui, data.tts_text, 'final')
+    }
+
+    announceGuideStageChange(data)
+
+    if (!hasConversationStarted) {
+      setSidebarPanel('progress')
+    }
+
+    applyConversationContext(data)
+    syncTourProgressFromResponse(data)
+    hasConversationStarted = true
+
+    applyAutoAdvanceFromResponse(data)
+    if (ui.contextHint) ui.contextHint.style.display = 'none'
+    renderSuggestionButtons(data.suggested_actions || [])
+    showProgressProofIfNeeded(data)
+    applyPlaybackState(data)
+  }
+
+  function handleGuidePlaybackFinished() {
+    const persona = personaMap.get(currentPersonaId)
+    const idleDesc = persona?.stateDescriptions['IDLE'] || '等待你的下一步'
+    updateStatus(ui, 'idle', 'idle', idleDesc)
+    if (!liveAvatar.isConnected) {
+      video.setState('IDLE')
+    }
+    hideCaption(ui)
+    if (ui.input && hasConversationStarted) {
+      ui.input.placeholder = '说「好」继续，或输入问题…'
+    }
+
+    if (autoAdvanceEnabled && hasConversationStarted && pendingAutoText) {
+      const autoText = pendingAutoText
+      pendingAutoText = null
+      updateStatus(ui, 'auto', 'auto', '7 秒后自动继续，可随时打断')
+      autoTimer = window.setTimeout(() => {
+        autoTimer = null
+        submitUserInput(autoText, 'auto')
+      }, 7000)
+    }
+  }
+
+  audio.onFinish = handleGuidePlaybackFinished
+
+  async function submitUserInput(rawText: string, source: InputSource = 'text') {
+    if (autoTimer) { window.clearTimeout(autoTimer); autoTimer = null }
+    const text = normalizeUserInput(rawText)
+    if (!text) return
+
+    await audio.resume()
+    showCaption(ui, text, 'partial')
+    updateStatus(ui, source === 'voice' ? 'Recognizing...' : 'Thinking...', undefined)
+
+    try {
+      const data = await requestLLM(text, source)
+      applyLLMResponse(data)
+    } catch {
+      updateStatus(ui, 'idle', 'idle', '等待你的下一步')
+      video.setState('IDLE')
+      renderSuggestionButtons([])
+    }
+  }
+
+  async function loadPersonaCopy() {
+    try {
+      const res = await fetch(`${API_BASE}/api/personas`)
+      const data = await res.json()
+      Object.entries(data || {}).forEach(([id, info]: any) => {
+        if (!id || !info) return
+        const persona = personaMap.get(id)
+        if (persona && info.display_name) {
+          persona.name = String(info.display_name)
+        }
+        if (persona && info.ui_role) {
+          persona.role = String(info.ui_role)
+        }
+        if (persona && info.ui_bio) {
+          persona.bio = String(info.ui_bio)
+        }
+        if (persona && info.ui_avatar) {
+          persona.avatar = String(info.ui_avatar)
+        }
+        if (info.start_guide_text) {
+          startGuideTextMap.set(id, String(info.start_guide_text))
+        }
+      })
+      renderPersonaList()
+      setPersona(currentPersonaId)
+    } catch {
+      // ignore failures; keep defaults from frontend
+    }
+  }
+
+  async function reloadContentConfig() {
+    await loadZoneFloors()
+    await loadPersonaCopy()
+  }
+
+  function getStartGuideCommand() {
+    const persona = personaMap.get(currentPersonaId)
+    return startGuideTextMap.get(currentPersonaId) || persona?.startGuideText || '开始导览'
+  }
+
+  return { send: submitUserInput, submitUserInput, getStartGuideCommand, reloadContentConfig }
+}

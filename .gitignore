@@ -1,0 +1,60 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+museguide/logs/
+
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+
+node_modules/
+dist/
+build/
+.vite/
+.venv/
+.venv*/
+.conda/
+.conda*/
+conda-meta/
+
+.idea/
+.vscode/
+
+museguide/configs/secrets.yaml
+volcengine_binary_demo/.venv/
+museguide/data/tenants/*/logs/
+
+# Runtime data and generated artifacts
+museguide/logs/
+museguide/data/
+tmp_remote_preview/
+tmp_remote_preview_std/
+
+# Large model/checkpoint artifacts should live outside Git or in Git LFS.
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.onnx
+*.zip
+models/
+pretrained/
+wav2lip/*.pth
+wav2lip/*.zip
+
+# Large generated documentation media.
+docs/assets/readme/*.gif
+
+# Frontend keeps the runtime MP4 demos, but excludes old/generated sidecars.
+frontend/public/videos_old/
+frontend/public/videos/**/audio/
+frontend/public/videos/**/prompt/
+
+# Nested upstream repository. Keep it managed separately unless we convert it
+# to a formal submodule later.
+livetalking/
