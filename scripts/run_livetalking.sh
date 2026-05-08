@@ -41,7 +41,9 @@ if [ -z "${DOUBAO_APPID:-}" ] || [ -z "${DOUBAO_TOKEN:-}" ]; then
   exit 1
 fi
 
-exec "${PY_BIN}" livetalking/app.py \
+cd livetalking
+
+exec "${PY_BIN}" app.py \
   --transport webrtc \
   --model "${LIVETALKING_MODEL}" \
   --avatar_id "${LIVETALKING_AVATAR_ID}" \
