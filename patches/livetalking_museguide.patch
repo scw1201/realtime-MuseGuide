@@ -1,26 +1,57 @@
-diff --git a/server/routes.py b/server/routes.py
-index e9c4d36..3a4b0f2 100644
---- a/server/routes.py
-+++ b/server/routes.py
-@@ -53,9 +53,20 @@ def _normalize_museguide_state(value: str) -> str:
-     return state if state in MUSEGUIDE_ALLOWED_STATES else "IDLE"
- 
- 
-+def _live_avatar_state(persona_id: str, video_state: str) -> str:
-+    state = _normalize_museguide_state(video_state)
-+    if str(persona_id or "").strip() == "woman_demo":
-+        if state == "GREETING_SELF":
-+            return "GREETING_SELF"
-+        if state == "IDLE" or state == "LISTENING":
-+            return "IDLE"
-+        return "FOCUS_EXHIBIT"
-+    return state
+diff --git a/avatars/base_avatar.py b/avatars/base_avatar.py
+index c90fc41..3c3f821 100644
+--- a/avatars/base_avatar.py
++++ b/avatars/base_avatar.py
+@@ -297,9 +297,14 @@ class BaseAvatar:
+         if hasattr(self, 'frame_list_cycle'):
+             return len(self.frame_list_cycle)
+         return 1
 +
-+
- def _museguide_avatar_candidates(persona_id: str, video_state: str) -> list[str]:
-     persona = str(persona_id or "woman_demo").strip() or "woman_demo"
--    state = _normalize_museguide_state(video_state)
-+    state = _live_avatar_state(persona, video_state)
-     return [
-         f"{persona}_{state}",
-         f"{persona}_IDLE",
++    def safe_avatar_index(self, idx):
++        length = self.get_avatar_length()
++        if length <= 0:
++            return 0
++        return idx % length
+         
+     def inference(self, quit_event):
+-        length = self.get_avatar_length()
+         index = 0
+         count = 0
+         counttime = 0
+@@ -329,6 +334,7 @@ class BaseAvatar:
+             current_speaking = not is_all_silence
+ 
+             if is_all_silence: #全为静音数据，只需要取fullimg，不需要推理
++                length = self.get_avatar_length()
+                 for i in range(self.batch_size):
+                     idx = mirror_index(length, index)
+                     self.res_frame_queue.put((None, audio_frames[i*2:i*2+2], idx))
+@@ -339,6 +345,7 @@ class BaseAvatar:
+                 t = time.perf_counter()
+ 
+                 pred = self.inference_batch(index, audiofeat_batch)
++                length = self.get_avatar_length()
+ 
+                 counttime += (time.perf_counter() - t)
+                 count += self.batch_size
+@@ -389,6 +396,7 @@ class BaseAvatar:
+                     target_frame = self.custom_img_cycle[audiotype][mirindex]
+                     self.custom_index[audiotype] += 1
+                 else:
++                    idx = self.safe_avatar_index(idx)
+                     target_frame = self.frame_list_cycle[idx]
+                 
+                 if enable_transition:
+@@ -405,6 +413,7 @@ class BaseAvatar:
+             else:
+                 self.speaking = True
+                 try:
++                    idx = self.safe_avatar_index(idx)
+                     current_frame = self.paste_back_frame(res_frame,idx)
+                 except Exception as e:
+                     logger.warning(f"paste_back_frame error: {e}")
+@@ -474,4 +483,3 @@ class BaseAvatar:
+ 
+         process_quit_event.set()
+         process_thread.join()
+-

@@ -9,6 +9,7 @@ LIVETALKING_MODEL="${LIVETALKING_MODEL:-wav2lip}"
 LIVETALKING_AVATAR_ID="${LIVETALKING_AVATAR_ID:-woman_demo_IDLE}"
 LIVETALKING_TTS="${LIVETALKING_TTS:-doubao}"
 LIVETALKING_REF_FILE="${LIVETALKING_REF_FILE:-zh_female_cancan_mars_bigtts}"
+LIVETALKING_BATCH_SIZE="${LIVETALKING_BATCH_SIZE:-8}"
 
 if [ -f ".env" ]; then
   set -a
@@ -47,6 +48,7 @@ exec "${PY_BIN}" app.py \
   --transport webrtc \
   --model "${LIVETALKING_MODEL}" \
   --avatar_id "${LIVETALKING_AVATAR_ID}" \
+  --batch_size "${LIVETALKING_BATCH_SIZE}" \
   --tts "${LIVETALKING_TTS}" \
   --REF_FILE "${LIVETALKING_REF_FILE}" \
   --listenport "${LIVETALKING_PORT}"
