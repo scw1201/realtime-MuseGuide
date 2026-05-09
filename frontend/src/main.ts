@@ -238,8 +238,16 @@ window.addEventListener('DOMContentLoaded', () => {
     })
   }
 
+  const syncNavTone = () => {
+    const hero = ui.landingPage?.querySelector<HTMLElement>('.landing-video-shell')
+    const onLanding = document.body.classList.contains('mode-landing')
+    const switchAt = hero ? hero.offsetHeight - 72 : 0
+    document.body.classList.toggle('nav-on-light', onLanding && window.scrollY > switchAt)
+  }
+
   const showPage = async (page: string) => {
     document.body.classList.toggle('mode-landing', page === 'landing')
+    document.body.classList.remove('nav-on-light')
     if (page === 'home') {
       document.body.classList.add('mode-home')
     } else {
@@ -286,6 +294,7 @@ window.addEventListener('DOMContentLoaded', () => {
       liveDemoPrepared = true
       controller.preconnectLiveAvatar()
     }
+    syncNavTone()
   }
 
   showPage('landing')
@@ -314,6 +323,9 @@ window.addEventListener('DOMContentLoaded', () => {
         target?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       })
     })
+
+  window.addEventListener('scroll', syncNavTone, { passive: true })
+  window.addEventListener('resize', syncNavTone)
 
   /* ============================
      键盘输入

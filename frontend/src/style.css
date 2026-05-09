@@ -145,6 +145,7 @@ body.mode-home::after {
   right: 0;
   height: var(--nav-height);
   z-index: 2147483647 !important;
+  color: #ffffff;
   background: transparent !important;
   border-bottom: 0 !important;
   box-shadow: none !important;
@@ -152,27 +153,10 @@ body.mode-home::after {
   pointer-events: none;
   transform: translate3d(0, 0, 0) !important;
   will-change: transform;
-  isolation: isolate;
-}
-
-.navbar::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(640px 132px at 50% 0%, rgba(212, 164, 91, 0.24), transparent 70%),
-    linear-gradient(180deg, rgba(5, 4, 3, 0.94), rgba(7, 5, 3, 0.78) 72%, rgba(7, 5, 3, 0.18));
-  border-bottom: 1px solid rgba(230, 194, 122, 0.12);
-  box-shadow:
-    0 16px 38px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.045);
-  pointer-events: none;
+  transition: color 0.24s ease;
 }
 
 .nav-inner {
-  position: relative;
-  z-index: 1;
   height: 100%;
   max-width: none;
   margin: 0;
@@ -196,6 +180,7 @@ body.mode-home::after {
   height: auto;
   display: block;
   filter: drop-shadow(0 2px 10px rgba(0,0,0,0.48));
+  transition: filter 0.24s ease;
 }
 
 .nav-links {
@@ -208,7 +193,7 @@ body.mode-home::after {
 
 .nav-link {
   font-size: 14px;
-  color: var(--text-dim);
+  color: currentColor;
   text-decoration: none;
   padding: 8px 10px;
   border-radius: 999px;
@@ -217,27 +202,35 @@ body.mode-home::after {
 }
 
 .nav-link:hover {
-  color: var(--text);
-  border-color: rgba(212, 164, 91, 0.25);
-  background: rgba(212, 164, 91, 0.08);
+  color: currentColor;
+  border-color: currentColor;
+  background: transparent;
 }
 
 .nav-link.active {
-  color: #1a120c;
-  background: linear-gradient(180deg, #e6c27a, #c08a36);
-  box-shadow: 0 8px 18px rgba(212,164,91,0.28);
+  color: currentColor;
+  background: transparent;
+  box-shadow: none;
 }
 
 body.mode-landing .nav-link.active {
-  color: #1a120c;
-  background: linear-gradient(180deg, #e6c27a, #c08a36);
-  box-shadow: 0 8px 18px rgba(212,164,91,0.28);
+  color: currentColor;
+  background: transparent;
+  box-shadow: none;
 }
 
 body.mode-landing .nav-link:hover {
-  color: var(--text);
-  border-color: rgba(212, 164, 91, 0.25);
-  background: rgba(212, 164, 91, 0.08);
+  color: currentColor;
+  border-color: currentColor;
+  background: transparent;
+}
+
+body.nav-on-light .navbar {
+  color: #050505;
+}
+
+body.nav-on-light .nav-logo {
+  filter: invert(1);
 }
 
 /* ============================
