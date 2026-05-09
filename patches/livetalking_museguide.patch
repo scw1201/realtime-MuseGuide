@@ -92,7 +92,7 @@ index 4b645e1..4bf479c 100644
  		results.append([x1, y1, x2, y2])
  
 diff --git a/avatars/wav2lip_avatar.py b/avatars/wav2lip_avatar.py
-index 85a2eb0..7b19b02 100644
+index 85a2eb0..c6c46aa 100644
 --- a/avatars/wav2lip_avatar.py
 +++ b/avatars/wav2lip_avatar.py
 @@ -48,6 +48,12 @@ from registry import register
@@ -101,8 +101,8 @@ index 85a2eb0..7b19b02 100644
  logger.info('Using {} for inference.'.format(device))
 +MOUTH_FOCUS_RATIO = 0.48
 +PASTE_FEATHER_PX = 18
-+MOUTH_BLEND_TOP_RATIO = 0.42
-+MOUTH_BLEND_FULL_RATIO = 0.58
++MOUTH_BLEND_TOP_RATIO = 0.40
++MOUTH_BLEND_FULL_RATIO = 0.54
 +MOUTH_BLEND_BOTTOM_RATIO = 0.94
 +MOUTH_BLEND_SIDE_RATIO = 0.18
  
