@@ -28,20 +28,6 @@ export function renderApp(root: HTMLElement) {
     </header>
 
     <section class="landing-page page" id="landingPage">
-      <div class="landing-video-shell" aria-hidden="true">
-        <video
-          class="landing-video"
-          autoplay
-          muted
-          loop
-          playsinline
-          poster="/poster.png"
-        >
-          <source src="/landing/concept_web.mp4" type="video/mp4" />
-        </video>
-        <div class="landing-video-overlay"></div>
-      </div>
-
       <div class="landing-content">
         <div class="landing-kicker">MuseGuide · Real-time AI Docent</div>
         <h1 class="landing-title">
@@ -63,6 +49,20 @@ export function renderApp(root: HTMLElement) {
           <span>状态视频调度</span>
           <span>馆方内容后台</span>
         </div>
+      </div>
+
+      <div class="landing-video-shell" aria-hidden="true">
+        <video
+          class="landing-video"
+          autoplay
+          muted
+          loop
+          playsinline
+          poster="/poster.png"
+        >
+          <source src="/landing/concept_web.mp4" type="video/mp4" />
+        </video>
+        <div class="landing-video-overlay"></div>
       </div>
 
       <div class="landing-capabilities" id="landingCapabilities">

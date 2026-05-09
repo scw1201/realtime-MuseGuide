@@ -234,6 +234,27 @@ body.mode-home::after {
   justify-self: end;
 }
 
+body.mode-landing .navbar {
+  background: transparent;
+  border-bottom-color: transparent;
+  backdrop-filter: none;
+}
+
+body.mode-landing .nav-link.active {
+  color: var(--text);
+  background: transparent;
+  box-shadow: none;
+}
+
+body.mode-landing .nav-link:hover {
+  background: rgba(246, 234, 214, 0.08);
+  border-color: rgba(246, 234, 214, 0.12);
+}
+
+body.mode-landing .nav-meta {
+  border-left-color: transparent;
+}
+
 /* ============================
    Stage (Video Area)
    ============================ */
@@ -267,22 +288,33 @@ body.mode-home::after {
    Product Landing
    ============================ */
 .landing-page {
-  min-height: 150vh;
-  padding: var(--nav-height) 24px 80px;
+  min-height: 100vh;
+  padding: calc(var(--nav-height) + 68px) 24px 88px;
   position: relative;
   isolation: isolate;
-  overflow: hidden;
-  background: #090806;
+  overflow: clip;
+  background:
+    radial-gradient(760px 420px at 18% 18%, rgba(212, 164, 91, 0.11), transparent 66%),
+    radial-gradient(820px 460px at 82% 24%, rgba(111, 133, 120, 0.12), transparent 68%),
+    linear-gradient(180deg, #090806 0%, #11100d 52%, #090806 100%);
 }
 
 .landing-video-shell {
-  position: fixed;
-  inset: 0;
-  z-index: -2;
+  width: min(1180px, calc(100vw - 48px));
+  aspect-ratio: 16 / 9;
+  margin: 10px auto 0;
+  position: relative;
+  z-index: 1;
   overflow: hidden;
+  border-radius: clamp(18px, 2vw, 32px);
+  border: 1px solid rgba(246, 234, 214, 0.12);
   background:
-    radial-gradient(900px 560px at 70% 16%, rgba(212, 164, 91, 0.18), transparent 64%),
+    radial-gradient(900px 560px at 70% 16%, rgba(212, 164, 91, 0.12), transparent 64%),
     linear-gradient(180deg, #090806, #17110b);
+  box-shadow:
+    0 42px 120px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(212, 164, 91, 0.06);
+  animation: landingCardRise 1s 0.26s ease both;
 }
 
 .landing-video {
@@ -291,29 +323,27 @@ body.mode-home::after {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.78;
-  filter: saturate(1.08) contrast(1.05) brightness(0.92);
-  transform: scale(1.04);
+  opacity: 1;
+  filter: saturate(1.08) contrast(1.04) brightness(1);
+  transform: scale(1.01);
 }
 
 .landing-video-overlay {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(8, 7, 5, 0.72), rgba(8, 7, 5, 0.22) 48%, rgba(8, 7, 5, 0.48)),
-    linear-gradient(180deg, rgba(8, 7, 5, 0.58), rgba(8, 7, 5, 0.04) 46%, rgba(8, 7, 5, 0.72)),
-    radial-gradient(720px 460px at 24% 34%, rgba(212, 164, 91, 0.12), transparent 62%);
+    linear-gradient(180deg, rgba(8, 7, 5, 0.02), rgba(8, 7, 5, 0.2) 78%, rgba(8, 7, 5, 0.42)),
+    radial-gradient(640px 360px at 50% 20%, rgba(255, 222, 164, 0.08), transparent 64%);
 }
 
 .landing-content {
-  min-height: calc(100vh - var(--nav-height));
-  max-width: 1120px;
+  max-width: 1080px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 72px 0 132px;
+  align-items: center;
+  text-align: center;
+  padding: 0 0 34px;
   position: relative;
 }
 
@@ -327,19 +357,19 @@ body.mode-home::after {
 }
 
 .landing-title {
-  max-width: 920px;
+  max-width: 1020px;
   margin: 0;
   color: rgba(250, 240, 220, 0.98);
-  font-size: clamp(46px, 8vw, 108px);
-  line-height: 0.95;
-  letter-spacing: -0.055em;
+  font-size: clamp(48px, 7.2vw, 104px);
+  line-height: 0.92;
+  letter-spacing: -0.06em;
   text-wrap: balance;
   text-shadow: 0 24px 72px rgba(0, 0, 0, 0.62);
   animation: landingReveal 1s 0.08s ease both;
 }
 
 .landing-subtitle {
-  max-width: 680px;
+  max-width: 760px;
   margin: 28px 0 0;
   color: rgba(246, 234, 214, 0.72);
   font-size: clamp(17px, 1.8vw, 22px);
@@ -404,7 +434,7 @@ body.mode-home::after {
 
 .landing-capabilities {
   max-width: 1120px;
-  margin: -34px auto 0;
+  margin: 26px auto 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
@@ -2027,16 +2057,19 @@ body:not(.mode-home) .chatbar {
 
   .landing-page {
     min-height: auto;
-    padding: var(--nav-height) 16px 54px;
+    padding: calc(var(--nav-height) + 30px) 16px 54px;
   }
 
-  .landing-video {
-    opacity: 0.66;
+  .landing-video-shell {
+    width: calc(100vw - 24px);
+    aspect-ratio: 4 / 5;
+    margin-top: 4px;
+    border-radius: 22px;
   }
 
   .landing-content {
-    min-height: calc(100vh - var(--nav-height));
-    padding: 52px 0 84px;
+    min-height: auto;
+    padding: 0 0 28px;
   }
 
   .landing-kicker {
