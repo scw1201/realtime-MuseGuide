@@ -19,7 +19,6 @@ export function renderApp(root: HTMLElement) {
           <a href="#" class="nav-link" data-page="analytics">数据看板</a>
           <a href="#" class="nav-link" data-page="admin">内容后台</a>
         </nav>
-        <div class="nav-meta">开放时间 09:00–17:00</div>
       </div>
     </header>
 
@@ -31,7 +30,6 @@ export function renderApp(root: HTMLElement) {
           muted
           loop
           playsinline
-          poster="/poster.png"
         >
           <source src="/landing/concept_web.mp4" type="video/mp4" />
         </video>

@@ -144,14 +144,11 @@ body.mode-home::after {
   left: 0;
   right: 0;
   height: var(--nav-height);
-  z-index: 120;
-  background: linear-gradient(
-    180deg,
-    rgba(21, 16, 11, 0.96),
-    rgba(21, 16, 11, 0.75)
-  );
-  border-bottom: 1px solid rgba(214, 179, 120, 0.18);
-  backdrop-filter: blur(10px);
+  z-index: 1000;
+  background: transparent;
+  border-bottom: 0;
+  backdrop-filter: none;
+  pointer-events: none;
 }
 
 .nav-inner {
@@ -160,9 +157,10 @@ body.mode-home::after {
   margin: 0;
   padding: 0 42px;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   align-items: center;
   gap: 18px;
+  pointer-events: auto;
 }
 
 .nav-brand {
@@ -183,8 +181,8 @@ body.mode-home::after {
   display: flex;
   gap: 14px;
   margin-left: 10px;
-  justify-content: center;
-  justify-self: center;
+  justify-content: flex-end;
+  justify-self: end;
 }
 
 .nav-link {
@@ -209,18 +207,14 @@ body.mode-home::after {
   box-shadow: 0 8px 18px rgba(212,164,91,0.28);
 }
 
-.nav-meta {
-  font-size: 13px;
-  color: var(--text-faint);
-  border-left: 1px solid rgba(214, 179, 120, 0.2);
-  padding-left: 16px;
-  justify-self: end;
-}
-
-body.mode-landing .navbar {
-  background: transparent;
-  border-bottom-color: transparent;
-  backdrop-filter: none;
+body:not(.mode-landing) .navbar {
+  background: linear-gradient(
+    180deg,
+    rgba(21, 16, 11, 0.9),
+    rgba(21, 16, 11, 0.62)
+  );
+  border-bottom: 1px solid rgba(214, 179, 120, 0.16);
+  backdrop-filter: blur(10px);
 }
 
 body.mode-landing .nav-link.active {
@@ -232,10 +226,6 @@ body.mode-landing .nav-link.active {
 body.mode-landing .nav-link:hover {
   background: rgba(246, 234, 214, 0.08);
   border-color: rgba(246, 234, 214, 0.12);
-}
-
-body.mode-landing .nav-meta {
-  border-left-color: transparent;
 }
 
 /* ============================
