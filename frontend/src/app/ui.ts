@@ -37,7 +37,7 @@ export function renderApp(root: HTMLElement) {
           playsinline
           poster="/poster.png"
         >
-          <source src="/landing/concept.mp4" type="video/mp4" />
+          <source src="/landing/concept_web.mp4" type="video/mp4" />
         </video>
         <div class="landing-video-overlay"></div>
       </div>
