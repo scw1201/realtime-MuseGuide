@@ -28,29 +28,6 @@ export function renderApp(root: HTMLElement) {
     </header>
 
     <section class="landing-page page" id="landingPage">
-      <div class="landing-content">
-        <div class="landing-kicker">MuseGuide · Real-time AI Docent</div>
-        <h1 class="landing-title">
-          让博物馆拥有会讲解、会回应、会带路的实时数字人导览员
-        </h1>
-        <p class="landing-subtitle">
-          以 LLM 调度展陈语境，以 TTS 驱动实时口型，以多状态视频承载导览动作，让馆方把一次演示变成可运营、可维护、可扩展的智慧导览入口。
-        </p>
-        <div class="landing-actions">
-          <button class="landing-cta primary" type="button" data-jump-page="home">
-            进入实时 Demo
-          </button>
-          <button class="landing-cta secondary" type="button" data-scroll-target="landingCapabilities">
-            查看能力亮点
-          </button>
-        </div>
-        <div class="landing-proof">
-          <span>实时口型对齐</span>
-          <span>状态视频调度</span>
-          <span>馆方内容后台</span>
-        </div>
-      </div>
-
       <div class="landing-video-shell" aria-hidden="true">
         <video
           class="landing-video"
@@ -63,6 +40,28 @@ export function renderApp(root: HTMLElement) {
           <source src="/landing/concept_web.mp4" type="video/mp4" />
         </video>
         <div class="landing-video-overlay"></div>
+        <div class="landing-content">
+          <div class="landing-kicker">MuseGuide · Real-time AI Docent</div>
+          <h1 class="landing-title">
+            让博物馆拥有会讲解、会回应、会带路的实时数字人导览员
+          </h1>
+          <p class="landing-subtitle">
+            以 LLM 调度展陈语境，以 TTS 驱动实时口型，以多状态视频承载导览动作，让馆方把一次演示变成可运营、可维护、可扩展的智慧导览入口。
+          </p>
+          <div class="landing-actions">
+            <button class="landing-cta primary" type="button" data-jump-page="home">
+              进入实时 Demo
+            </button>
+            <button class="landing-cta secondary" type="button" data-scroll-target="landingCapabilities">
+              查看能力亮点
+            </button>
+          </div>
+          <div class="landing-proof">
+            <span>实时口型对齐</span>
+            <span>状态视频调度</span>
+            <span>馆方内容后台</span>
+          </div>
+        </div>
       </div>
 
       <div class="landing-capabilities" id="landingCapabilities">

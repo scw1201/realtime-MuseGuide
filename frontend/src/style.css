@@ -289,7 +289,7 @@ body.mode-landing .nav-meta {
    ============================ */
 .landing-page {
   min-height: 100vh;
-  padding: calc(var(--nav-height) + 68px) 24px 88px;
+  padding: 0 0 88px;
   position: relative;
   isolation: isolate;
   overflow: clip;
@@ -300,20 +300,20 @@ body.mode-landing .nav-meta {
 }
 
 .landing-video-shell {
-  width: min(1180px, calc(100vw - 48px));
-  aspect-ratio: 16 / 9;
-  margin: 10px auto 0;
+  width: 100%;
+  aspect-ratio: 2.08 / 1;
+  min-height: 620px;
+  max-height: 980px;
+  margin: 0;
   position: relative;
   z-index: 1;
   overflow: hidden;
-  border-radius: clamp(18px, 2vw, 32px);
-  border: 1px solid rgba(246, 234, 214, 0.12);
+  border-radius: 0;
+  border: 0;
   background:
     radial-gradient(900px 560px at 70% 16%, rgba(212, 164, 91, 0.12), transparent 64%),
     linear-gradient(180deg, #090806, #17110b);
-  box-shadow:
-    0 42px 120px rgba(0, 0, 0, 0.58),
-    0 0 0 1px rgba(212, 164, 91, 0.06);
+  box-shadow: none;
   animation: landingCardRise 1s 0.26s ease both;
 }
 
@@ -332,19 +332,28 @@ body.mode-landing .nav-meta {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(8, 7, 5, 0.02), rgba(8, 7, 5, 0.2) 78%, rgba(8, 7, 5, 0.42)),
-    radial-gradient(640px 360px at 50% 20%, rgba(255, 222, 164, 0.08), transparent 64%);
+    linear-gradient(180deg, rgba(8, 7, 5, 0.36), rgba(8, 7, 5, 0.18) 34%, rgba(8, 7, 5, 0.36) 100%),
+    radial-gradient(900px 460px at 50% 44%, rgba(0, 0, 0, 0.18), transparent 64%);
 }
 
 .landing-content {
+  position: absolute;
+  inset: var(--nav-height) 24px 0;
+  z-index: 2;
   max-width: 1080px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 0 0 34px;
-  position: relative;
+  padding: 32px 0 92px;
+  pointer-events: none;
+}
+
+.landing-actions,
+.landing-proof {
+  pointer-events: auto;
 }
 
 .landing-kicker {
@@ -360,9 +369,9 @@ body.mode-landing .nav-meta {
   max-width: 1020px;
   margin: 0;
   color: rgba(250, 240, 220, 0.98);
-  font-size: clamp(48px, 7.2vw, 104px);
-  line-height: 0.92;
-  letter-spacing: -0.06em;
+  font-size: clamp(48px, 6.2vw, 92px);
+  line-height: 1.02;
+  letter-spacing: -0.055em;
   text-wrap: balance;
   text-shadow: 0 24px 72px rgba(0, 0, 0, 0.62);
   animation: landingReveal 1s 0.08s ease both;
@@ -434,7 +443,8 @@ body.mode-landing .nav-meta {
 
 .landing-capabilities {
   max-width: 1120px;
-  margin: 26px auto 0;
+  margin: 34px auto 0;
+  padding: 0 24px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
@@ -2057,19 +2067,22 @@ body:not(.mode-home) .chatbar {
 
   .landing-page {
     min-height: auto;
-    padding: calc(var(--nav-height) + 30px) 16px 54px;
+    padding: 0 0 54px;
   }
 
   .landing-video-shell {
-    width: calc(100vw - 24px);
+    width: 100%;
     aspect-ratio: 4 / 5;
-    margin-top: 4px;
-    border-radius: 22px;
+    min-height: 620px;
+    max-height: none;
+    margin-top: 0;
+    border-radius: 0;
   }
 
   .landing-content {
+    inset: var(--nav-height) 16px 0;
     min-height: auto;
-    padding: 0 0 28px;
+    padding: 24px 0 56px;
   }
 
   .landing-kicker {
