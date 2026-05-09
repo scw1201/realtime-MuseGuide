@@ -145,10 +145,14 @@ body.mode-home::after {
   right: 0;
   height: var(--nav-height);
   z-index: 1000;
-  background: transparent !important;
-  border: 0 !important;
+  background: linear-gradient(
+    180deg,
+    rgba(21, 16, 11, 0.9),
+    rgba(21, 16, 11, 0.62)
+  ) !important;
+  border-bottom: 1px solid rgba(214, 179, 120, 0.16) !important;
   box-shadow: none !important;
-  backdrop-filter: none !important;
+  backdrop-filter: blur(10px) !important;
   pointer-events: none;
 }
 
@@ -208,47 +212,16 @@ body.mode-home::after {
   box-shadow: 0 8px 18px rgba(212,164,91,0.28);
 }
 
-body:not(.mode-landing) .navbar {
-  background: linear-gradient(
-    180deg,
-    rgba(21, 16, 11, 0.9),
-    rgba(21, 16, 11, 0.62)
-  ) !important;
-  border-bottom: 1px solid rgba(214, 179, 120, 0.16) !important;
-  backdrop-filter: blur(10px) !important;
-}
-
 body.mode-landing .nav-link.active {
-  color: inherit;
-  background: transparent;
-  box-shadow: none;
+  color: #1a120c;
+  background: linear-gradient(180deg, #e6c27a, #c08a36);
+  box-shadow: 0 8px 18px rgba(212,164,91,0.28);
 }
 
 body.mode-landing .nav-link:hover {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-body.mode-landing.landing-solid-nav .navbar {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border-bottom: 1px solid rgba(8, 8, 6, 0.14) !important;
-  backdrop-filter: blur(18px) saturate(1.2) !important;
-}
-
-body.mode-landing.landing-solid-nav .nav-logo {
-  filter: invert(1) drop-shadow(0 1px 5px rgba(255, 255, 255, 0.18));
-}
-
-body.mode-landing.landing-solid-nav .nav-link {
-  color: rgba(8, 8, 6, 0.68);
-  font-weight: 760;
-}
-
-body.mode-landing.landing-solid-nav .nav-link.active,
-body.mode-landing.landing-solid-nav .nav-link:hover {
-  color: #080806;
-  background: rgba(8, 8, 6, 0.06);
-  border-color: rgba(8, 8, 6, 0.1);
+  color: var(--text);
+  border-color: rgba(212, 164, 91, 0.25);
+  background: rgba(212, 164, 91, 0.08);
 }
 
 /* ============================
@@ -455,22 +428,22 @@ body.mode-landing.landing-solid-nav .nav-link:hover {
 
 .landing-cta-text {
   grid-area: 1 / 1;
-  transition: opacity 0.22s ease, transform 0.22s ease;
+  transition: opacity 0.26s ease, filter 0.26s ease;
 }
 
 .landing-cta-hover {
   opacity: 0;
-  transform: translateY(8px);
+  filter: blur(6px);
 }
 
 .landing-cta.primary:hover .landing-cta-default {
   opacity: 0;
-  transform: translateY(-8px);
+  filter: blur(6px);
 }
 
 .landing-cta.primary:hover .landing-cta-hover {
   opacity: 1;
-  transform: translateY(0);
+  filter: blur(0);
 }
 
 .landing-cta:hover {
@@ -543,7 +516,7 @@ body.mode-landing.landing-solid-nav .nav-link:hover {
   z-index: 3;
   background: #ffffff;
   color: #080806;
-  padding: 0 max(24px, 6vw) 112px;
+  padding: clamp(72px, 9vw, 128px) max(24px, 6vw) 112px;
 }
 
 .landing-section-label {
