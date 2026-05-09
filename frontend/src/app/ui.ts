@@ -40,11 +40,12 @@ export function renderApp(root: HTMLElement) {
             <img src="/museguide-logo.svg" class="landing-logo" alt="MuseGuide" />
           </h1>
           <p class="landing-subtitle">
-            以 LLM 调度展陈语境，以 TTS 驱动实时口型，以多状态视频承载导览动作，让馆方把一次演示变成可运营、可维护、可扩展的智慧导览入口。
+            为博物馆而生的智能实时互动数字人导览
           </p>
           <div class="landing-actions">
             <button class="landing-cta primary" type="button" data-jump-page="home">
-              进入免费体验
+              <span class="landing-cta-text landing-cta-default">进入免费体验</span>
+              <span class="landing-cta-text landing-cta-hover">进入交互原型</span>
             </button>
             <button class="landing-cta secondary" type="button" data-scroll-target="landingCapabilities">
               查看能力亮点
@@ -58,23 +59,34 @@ export function renderApp(root: HTMLElement) {
         </div>
       </div>
 
-      <div class="landing-capabilities" id="landingCapabilities">
-        <article class="landing-capability">
-          <span class="capability-index">01</span>
-          <h2>实时数字人讲解</h2>
-          <p>接入实时口型链路，让 LLM 返回的话直接变成可听、可看的导览员表达。</p>
-        </article>
-        <article class="landing-capability">
-          <span class="capability-index">02</span>
-          <h2>多状态视频调度</h2>
-          <p>问候、聚焦、细致讲解、待机等状态由导览语义驱动，减少“只会播一个视频”的机械感。</p>
-        </article>
-        <article class="landing-capability">
-          <span class="capability-index">03</span>
-          <h2>可维护内容中台</h2>
-          <p>展区、展品、人物文案与数据看板保持在同一套系统里，方便馆方持续运营。</p>
-        </article>
-      </div>
+      <section class="landing-mission" id="landingCapabilities">
+        <p>
+          为博物馆建立全新的导览基础设施：以<strong>数字导览员</strong>为核心的人形交互界面。
+        </p>
+      </section>
+
+      <section class="landing-product">
+        <div class="landing-section-label">Product Features</div>
+        <h2 class="landing-section-title">产品特性</h2>
+
+        <div class="landing-feature-stack">
+          <article class="landing-feature-card">
+            <span class="capability-index">01</span>
+            <h3>实时数字人讲解</h3>
+            <p>接入实时口型链路，让 LLM 返回的话直接变成可听、可看的导览员表达。</p>
+          </article>
+          <article class="landing-feature-card landing-feature-dark">
+            <span class="capability-index">02</span>
+            <h3>多状态视频调度</h3>
+            <p>问候、聚焦、细致讲解、待机等状态由导览语义驱动，减少“只会播一个视频”的机械感。</p>
+          </article>
+          <article class="landing-feature-card">
+            <span class="capability-index">03</span>
+            <h3>可维护内容中台</h3>
+            <p>展区、展品、人物文案与数据看板保持在同一套系统里，方便馆方持续运营。</p>
+          </article>
+        </div>
+      </section>
     </section>
 
     <!-- 主舞台区域 -->
