@@ -263,10 +263,10 @@ body.mode-landing .nav-link:hover {
    ============================ */
 .landing-page {
   min-height: 100vh;
-  padding: 0 0 88px;
+  padding: clamp(620px, 48.08vw, 980px) 0 88px;
   position: relative;
   isolation: isolate;
-  overflow: clip;
+  overflow: visible;
   background:
     radial-gradient(760px 420px at 18% 18%, rgba(212, 164, 91, 0.11), transparent 66%),
     radial-gradient(820px 460px at 82% 24%, rgba(111, 133, 120, 0.12), transparent 68%),
@@ -274,13 +274,13 @@ body.mode-landing .nav-link:hover {
 }
 
 .landing-video-shell {
-  width: 100%;
-  aspect-ratio: 2.08 / 1;
-  min-height: 620px;
-  max-height: 980px;
+  width: 100vw;
+  height: clamp(620px, 48.08vw, 980px);
   margin: 0;
-  position: relative;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1;
   overflow: hidden;
   border-radius: 0;
@@ -289,6 +289,7 @@ body.mode-landing .nav-link:hover {
     radial-gradient(900px 560px at 70% 16%, rgba(212, 164, 91, 0.12), transparent 64%),
     linear-gradient(180deg, #090806, #17110b);
   box-shadow: none;
+  pointer-events: none;
 }
 
 .landing-video {
@@ -2045,14 +2046,12 @@ body:not(.mode-home) .chatbar {
 
   .landing-page {
     min-height: auto;
-    padding: 0 0 54px;
+    padding: 620px 0 54px;
   }
 
   .landing-video-shell {
     width: 100%;
-    aspect-ratio: 4 / 5;
-    min-height: 620px;
-    max-height: none;
+    height: 620px;
     margin-top: 0;
     border-radius: 0;
   }
