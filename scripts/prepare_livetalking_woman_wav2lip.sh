@@ -18,15 +18,22 @@ ALIGNED_HEIGHT="${ALIGNED_HEIGHT:-1764}"
 ALIGNED_FPS="${ALIGNED_FPS:-25}"
 ALIGNED_ROOT="${ALIGNED_ROOT:-${LIVETALKING_ROOT}/data/museguide_aligned_videos/${PERSONA_ID}}"
 FORCE_REBUILD="${FORCE_REBUILD:-0}"
-STATES="${STATES:-IDLE GREETING_SELF FOCUS_EXHIBIT}"
+STATES="${STATES:-IDLE GREETING_SELF FOCUS_EXHIBIT EXPLAIN_DETAILED}"
 
 read -r -a states <<< "${STATES}"
 
 source_for_state() {
   case "$1" in
-    IDLE) echo "${VIDEO_ROOT}/idle.mp4" ;;
+    IDLE)
+      if [ -f "${VIDEO_ROOT}/woman_demo_IDLE.mp4" ]; then
+        echo "${VIDEO_ROOT}/woman_demo_IDLE.mp4"
+      else
+        echo "${VIDEO_ROOT}/idle.mp4"
+      fi
+      ;;
     GREETING_SELF) echo "${VIDEO_ROOT}/woman_demo_GREETING_SELF.mp4" ;;
     FOCUS_EXHIBIT) echo "${VIDEO_ROOT}/woman_demo_FOCUS_EXHIBIT.mp4" ;;
+    EXPLAIN_DETAILED) echo "${VIDEO_ROOT}/woman_demo_EXPLAIN_DETAILED.mp4" ;;
     *) echo "" ;;
   esac
 }
