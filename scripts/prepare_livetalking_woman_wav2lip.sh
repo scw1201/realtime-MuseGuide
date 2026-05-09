@@ -18,8 +18,9 @@ ALIGNED_HEIGHT="${ALIGNED_HEIGHT:-1764}"
 ALIGNED_FPS="${ALIGNED_FPS:-25}"
 ALIGNED_ROOT="${ALIGNED_ROOT:-${LIVETALKING_ROOT}/data/museguide_aligned_videos/${PERSONA_ID}}"
 FORCE_REBUILD="${FORCE_REBUILD:-0}"
+STATES="${STATES:-IDLE GREETING_SELF FOCUS_EXHIBIT}"
 
-states=(IDLE GREETING_SELF FOCUS_EXHIBIT)
+read -r -a states <<< "${STATES}"
 
 source_for_state() {
   case "$1" in
@@ -31,6 +32,7 @@ source_for_state() {
 }
 
 echo "Preparing LiveTalking Wav2Lip assets for ${PERSONA_ID}"
+echo "Selected states: ${STATES}"
 echo "If dependency download is slow, enable your shell proxy first with: proxy_on"
 
 mkdir -p "${LIVETALKING_ROOT}/models"
