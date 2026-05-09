@@ -31,7 +31,7 @@ export function renderApp(root: HTMLElement) {
           loop
           playsinline
         >
-          <source src="/landing/concept.mp4" type="video/mp4" />
+          <source src="/landing/concept.mp4?v=20260510" type="video/mp4" />
         </video>
         <div class="landing-video-overlay"></div>
         <div class="landing-content">
