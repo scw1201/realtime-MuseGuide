@@ -144,22 +144,36 @@ body.mode-home::after {
   left: 0;
   right: 0;
   height: var(--nav-height);
-  z-index: 2147483000;
-  background:
-    radial-gradient(520px 120px at 50% 0%, rgba(212, 164, 91, 0.2), transparent 72%),
-    linear-gradient(180deg, rgba(7, 5, 3, 0.78), rgba(7, 5, 3, 0.42) 64%, rgba(7, 5, 3, 0)) !important;
-  border-bottom: 1px solid rgba(230, 194, 122, 0.08) !important;
-  box-shadow:
-    0 14px 36px rgba(0, 0, 0, 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
-  backdrop-filter: blur(14px) saturate(1.12) !important;
+  z-index: 2147483647 !important;
+  background: transparent !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
   pointer-events: none;
   transform: translate3d(0, 0, 0) !important;
   will-change: transform;
   isolation: isolate;
 }
 
+.navbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(640px 132px at 50% 0%, rgba(212, 164, 91, 0.24), transparent 70%),
+    linear-gradient(180deg, rgba(5, 4, 3, 0.94), rgba(7, 5, 3, 0.78) 72%, rgba(7, 5, 3, 0.18));
+  border-bottom: 1px solid rgba(230, 194, 122, 0.12);
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  backdrop-filter: blur(14px) saturate(1.12);
+  pointer-events: none;
+}
+
 .nav-inner {
+  position: relative;
+  z-index: 1;
   height: 100%;
   max-width: none;
   margin: 0;
@@ -284,6 +298,8 @@ body.mode-landing .nav-link:hover {
     linear-gradient(180deg, #090806, #17110b);
   box-shadow: none;
   pointer-events: none;
+  transform: none;
+  will-change: auto;
 }
 
 .landing-video {
@@ -294,7 +310,7 @@ body.mode-landing .nav-link:hover {
   object-fit: cover;
   opacity: 1;
   filter: saturate(1.08) contrast(1.04) brightness(1);
-  transform: scale(1.01);
+  transform: none;
 }
 
 .landing-video-overlay {
