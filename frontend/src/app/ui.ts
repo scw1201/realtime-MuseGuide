@@ -98,6 +98,9 @@ export function renderApp(root: HTMLElement) {
               接入实时数字人
             </button>
             <span class="liveavatar-status" id="liveAvatarStatus">未连接</span>
+            <button class="liveavatar-interrupt" id="liveAvatarInterrupt" type="button">
+              打断
+            </button>
             <button class="liveavatar-log-toggle" id="liveAvatarLogToggle" type="button">
               log
             </button>
@@ -172,6 +175,7 @@ export function getUI() {
     // video
     video: document.getElementById('avatar') as HTMLVideoElement,
     liveAvatarToggle: document.getElementById('liveAvatarToggle') as HTMLButtonElement,
+    liveAvatarInterrupt: document.getElementById('liveAvatarInterrupt') as HTMLButtonElement,
     liveAvatarStatus: document.getElementById('liveAvatarStatus') as HTMLSpanElement,
     liveAvatarLogToggle: document.getElementById('liveAvatarLogToggle') as HTMLButtonElement,
     liveAvatarLog: document.getElementById('liveAvatarLog') as HTMLDivElement,

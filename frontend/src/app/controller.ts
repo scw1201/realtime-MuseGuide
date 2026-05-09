@@ -120,9 +120,11 @@ export function createController(ui: UI) {
     if (liveAvatar.isStarting) {
       ui.liveAvatarToggle.textContent = '正在连接…'
       ui.liveAvatarToggle.disabled = true
+      if (ui.liveAvatarInterrupt) ui.liveAvatarInterrupt.disabled = true
       return
     }
     ui.liveAvatarToggle.disabled = false
+    if (ui.liveAvatarInterrupt) ui.liveAvatarInterrupt.disabled = !liveAvatar.isConnected
     ui.liveAvatarToggle.textContent = liveAvatar.isConnected
       ? '关闭实时口型'
       : '接入实时口型'
@@ -580,6 +582,20 @@ export function createController(ui: UI) {
   ui.progressTab?.addEventListener('click', () => setSidebarPanel('progress'))
   ui.liveAvatarToggle?.addEventListener('click', () => {
     toggleLiveAvatar()
+  })
+  ui.liveAvatarInterrupt?.addEventListener('click', async () => {
+    if (!liveAvatar.isConnected) return
+    try {
+      ui.liveAvatarInterrupt.disabled = true
+      await liveAvatar.interrupt()
+      if (ui.liveAvatarStatus) ui.liveAvatarStatus.textContent = '已打断，回到待机'
+      updateStatus(ui, 'idle', 'idle', '静待观众')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      if (ui.liveAvatarStatus) ui.liveAvatarStatus.textContent = `打断失败：${message.slice(0, 34)}`
+    } finally {
+      updateLiveAvatarToggle()
+    }
   })
   ui.liveAvatarLogToggle?.addEventListener('click', () => {
     ui.liveAvatarLog?.classList.toggle('hidden')

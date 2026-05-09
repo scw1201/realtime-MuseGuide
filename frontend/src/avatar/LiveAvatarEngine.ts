@@ -164,12 +164,14 @@ export class LiveAvatarEngine {
   async interrupt() {
     if (!this.connected || !this.sessionId) return
     this.log('interrupt')
-    await fetch(`${this.baseUrl}/interrupt_talk`, {
+    const res = await fetch(`${this.baseUrl}/interrupt_talk`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionid: this.sessionId }),
-    }).catch(() => {})
+    })
+    if (!res.ok) throw new Error(`LiveTalking /interrupt_talk failed with ${res.status}`)
     this.stopSpeakingPoll()
+    this.callbacks.onSpeakEnd?.()
   }
 
   private waitForIceGathering(pc: RTCPeerConnection) {
