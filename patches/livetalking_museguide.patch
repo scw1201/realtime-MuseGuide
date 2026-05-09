@@ -22,10 +22,22 @@ index 30c19f6..b8ad627 100644
      appasync.on_shutdown.append(on_shutdown)
      appasync.router.add_post("/offer", offer)
 diff --git a/avatars/base_avatar.py b/avatars/base_avatar.py
-index c90fc41..3c3f821 100644
+index c90fc41..9585f5b 100644
 --- a/avatars/base_avatar.py
 +++ b/avatars/base_avatar.py
-@@ -297,9 +297,14 @@ class BaseAvatar:
+@@ -72,6 +72,11 @@ class BaseAvatar:
+         self._record_video_pipe = None
+         self._record_audio_pipe = None
+         self.width = self.height = 0
++        self.museguide_return_to_idle = False
++        self.museguide_idle_model = ""
++        self.museguide_idle_avatar_id = ""
++        self.museguide_idle_payload = None
++        self.museguide_idle_transition_duration = 0.32
+ 
+         self.custom_audiotype = 0 # 0: normal, 1: sinlence, >1: custom audio
+         self.custom_img_cycle = {}
+@@ -297,9 +302,58 @@ class BaseAvatar:
          if hasattr(self, 'frame_list_cycle'):
              return len(self.frame_list_cycle)
          return 1
@@ -35,13 +47,57 @@ index c90fc41..3c3f821 100644
 +        if length <= 0:
 +            return 0
 +        return idx % length
++
++    def set_museguide_idle_return(self, model_name, idle_payload, idle_avatar_id, duration=0.32):
++        self.museguide_idle_model = str(model_name or "")
++        self.museguide_idle_payload = idle_payload
++        self.museguide_idle_avatar_id = str(idle_avatar_id or "")
++        self.museguide_idle_transition_duration = max(0.05, float(duration or 0.32))
++        self.museguide_return_to_idle = bool(idle_payload and idle_avatar_id)
++
++    def clear_museguide_idle_return(self):
++        self.museguide_return_to_idle = False
++
++    def _apply_museguide_avatar_payload(self, model_name, payload):
++        if model_name == "wav2lip":
++            (
++                self.frame_list_cycle,
++                self.face_list_cycle,
++                self.coord_list_cycle,
++            ) = payload
++            return
++        if model_name == "musetalk":
++            (
++                self.frame_list_cycle,
++                self.mask_list_cycle,
++                self.coord_list_cycle,
++                self.mask_coords_list_cycle,
++                self.input_latent_list_cycle,
++            ) = payload
++            return
++        raise ValueError(f"Unsupported MuseGuide live model: {model_name}")
++
++    def return_to_museguide_idle(self):
++        if not self.museguide_return_to_idle or self.museguide_idle_payload is None:
++            return False
++        if getattr(self, "current_avatar_id", "") == self.museguide_idle_avatar_id:
++            self.clear_museguide_idle_return()
++            return False
++
++        self._apply_museguide_avatar_payload(self.museguide_idle_model, self.museguide_idle_payload)
++        self.current_avatar_id = self.museguide_idle_avatar_id
++        if hasattr(self, "init_customindex"):
++            self.init_customindex()
++        self.clear_museguide_idle_return()
++        logger.info("MuseGuide returned to idle avatar: %s", self.current_avatar_id)
++        return True
          
      def inference(self, quit_event):
 -        length = self.get_avatar_length()
          index = 0
          count = 0
          counttime = 0
-@@ -329,6 +334,7 @@ class BaseAvatar:
+@@ -329,6 +383,7 @@ class BaseAvatar:
              current_speaking = not is_all_silence
  
              if is_all_silence: #全为静音数据，只需要取fullimg，不需要推理
@@ -49,7 +105,7 @@ index c90fc41..3c3f821 100644
                  for i in range(self.batch_size):
                      idx = mirror_index(length, index)
                      self.res_frame_queue.put((None, audio_frames[i*2:i*2+2], idx))
-@@ -339,6 +345,7 @@ class BaseAvatar:
+@@ -339,6 +394,7 @@ class BaseAvatar:
                  t = time.perf_counter()
  
                  pred = self.inference_batch(index, audiofeat_batch)
@@ -57,15 +113,57 @@ index c90fc41..3c3f821 100644
  
                  counttime += (time.perf_counter() - t)
                  count += self.batch_size
-@@ -389,6 +396,7 @@ class BaseAvatar:
+@@ -356,14 +412,11 @@ class BaseAvatar:
+         logger.info('baseavatar inference thread stop')
+ 
+     def process_frames(self,quit_event):
+-        enable_transition = False  # 设置为False禁用过渡效果，True启用
+-        
+         _last_speaking = False
+         _transition_start = time.time()
+-        if enable_transition:
+-            _transition_duration = 0.1  # 过渡时间
+-            _last_silent_frame = None  # 静音帧缓存
+-            _last_speaking_frame = None  # 说话帧缓存
++        _transition_duration = 0.12
++        _last_silent_frame = None
++        _last_speaking_frame = None
+ 
+         self.output.start()
+         
+@@ -379,6 +432,10 @@ class BaseAvatar:
+             if current_speaking != _last_speaking:
+                 logger.info(f"状态切换：{'说话' if _last_speaking else '静音'} → {'说话' if current_speaking else '静音'}")
+                 _transition_start = time.time()
++                if not current_speaking and self.return_to_museguide_idle():
++                    _transition_duration = self.museguide_idle_transition_duration
++                else:
++                    _transition_duration = 0.12
+             _last_speaking = current_speaking
+ 
+             if audio_frames[0].type!=0 and audio_frames[1].type!=0: #全为静音数据，只需要取fullimg
+@@ -389,37 +446,29 @@ class BaseAvatar:
                      target_frame = self.custom_img_cycle[audiotype][mirindex]
                      self.custom_index[audiotype] += 1
                  else:
 +                    idx = self.safe_avatar_index(idx)
                      target_frame = self.frame_list_cycle[idx]
                  
-                 if enable_transition:
-@@ -405,6 +413,7 @@ class BaseAvatar:
+-                if enable_transition:
+-                    # 说话→静音过渡
+-                    if time.time() - _transition_start < _transition_duration and _last_speaking_frame is not None:
+-                        alpha = min(1.0, (time.time() - _transition_start) / _transition_duration)
+-                        combine_frame = cv2.addWeighted(_last_speaking_frame, 1-alpha, target_frame, alpha, 0)
+-                    else:
+-                        combine_frame = target_frame
+-                    # 缓存静音帧
+-                    _last_silent_frame = combine_frame.copy()
++                if time.time() - _transition_start < _transition_duration and _last_speaking_frame is not None:
++                    alpha = min(1.0, (time.time() - _transition_start) / _transition_duration)
++                    combine_frame = cv2.addWeighted(_last_speaking_frame, 1-alpha, target_frame, alpha, 0)
+                 else:
+                     combine_frame = target_frame
++                _last_silent_frame = combine_frame.copy()
              else:
                  self.speaking = True
                  try:
@@ -73,7 +171,26 @@ index c90fc41..3c3f821 100644
                      current_frame = self.paste_back_frame(res_frame,idx)
                  except Exception as e:
                      logger.warning(f"paste_back_frame error: {e}")
-@@ -474,4 +483,3 @@ class BaseAvatar:
+                     continue
+-                if enable_transition:
+-                    # 静音→说话过渡
+-                    if time.time() - _transition_start < _transition_duration and _last_silent_frame is not None:
+-                        alpha = min(1.0, (time.time() - _transition_start) / _transition_duration)
+-                        combine_frame = cv2.addWeighted(_last_silent_frame, 1-alpha, current_frame, alpha, 0)
+-                    else:
+-                        combine_frame = current_frame
+-                    # 缓存说话帧
+-                    _last_speaking_frame = combine_frame.copy()
++                if time.time() - _transition_start < _transition_duration and _last_silent_frame is not None:
++                    alpha = min(1.0, (time.time() - _transition_start) / _transition_duration)
++                    combine_frame = cv2.addWeighted(_last_silent_frame, 1-alpha, current_frame, alpha, 0)
+                 else:
+                     combine_frame = current_frame
++                _last_speaking_frame = combine_frame.copy()
+ 
+             cv2.putText(combine_frame, "LiveTalking", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (128,128,128), 1)
+             
+@@ -474,4 +523,3 @@ class BaseAvatar:
  
          process_quit_event.set()
          process_thread.join()
@@ -180,10 +297,10 @@ index 85a2eb0..c6c46aa 100644
 -
 +        return feather_blend_patch(combine_frame, res_frame, y1, y2, x1, x2)
 diff --git a/server/routes.py b/server/routes.py
-index 37e7d57..3a4b0f2 100644
+index 37e7d57..a27d470 100644
 --- a/server/routes.py
 +++ b/server/routes.py
-@@ -38,6 +38,99 @@ def get_session(request, sessionid: str):
+@@ -38,6 +38,127 @@ def get_session(request, sessionid: str):
      return session_manager.get_session(sessionid)
  
  
@@ -222,6 +339,16 @@ index 37e7d57..3a4b0f2 100644
 +    ]
 +
 +
++def _load_museguide_avatar_payload(request, avatar_id: str):
++    global_avatars = request.app.get("museguide_global_avatars", {})
++    load_avatar = request.app.get("museguide_load_avatar")
++    if avatar_id not in global_avatars:
++        if load_avatar is None:
++            raise RuntimeError("LiveTalking load_avatar is not configured")
++        global_avatars[avatar_id] = load_avatar(avatar_id)
++    return global_avatars[avatar_id]
++
++
 +def _apply_avatar_payload(avatar_session, model_name: str, payload) -> None:
 +    if model_name == "wav2lip":
 +        (
@@ -252,11 +379,8 @@ index 37e7d57..3a4b0f2 100644
 +    for avatar_id in _museguide_avatar_candidates(persona_id, video_state):
 +        attempted.append(avatar_id)
 +        try:
-+            if avatar_id not in global_avatars:
-+                if load_avatar is None:
-+                    raise RuntimeError("LiveTalking load_avatar is not configured")
-+                global_avatars[avatar_id] = load_avatar(avatar_id)
-+            _apply_avatar_payload(avatar_session, model_name, global_avatars[avatar_id])
++            payload = _load_museguide_avatar_payload(request, avatar_id)
++            _apply_avatar_payload(avatar_session, model_name, payload)
 +            avatar_session.current_avatar_id = avatar_id
 +            if hasattr(avatar_session, "init_customindex"):
 +                avatar_session.init_customindex()
@@ -280,10 +404,31 @@ index 37e7d57..3a4b0f2 100644
 +    raise RuntimeError(f"No usable MuseGuide avatar found. attempted={attempted}")
 +
 +
++def _configure_idle_return(request, avatar_session, persona_id: str, video_state: str) -> None:
++    persona = str(persona_id or "woman_demo").strip() or "woman_demo"
++    if _live_avatar_state(persona, video_state) == "IDLE":
++        if hasattr(avatar_session, "clear_museguide_idle_return"):
++            avatar_session.clear_museguide_idle_return()
++        return
++
++    idle_avatar_id = f"{persona}_IDLE"
++    try:
++        idle_payload = _load_museguide_avatar_payload(request, idle_avatar_id)
++        if hasattr(avatar_session, "set_museguide_idle_return"):
++            avatar_session.set_museguide_idle_return(
++                request.app.get("museguide_model", ""),
++                idle_payload,
++                idle_avatar_id,
++                0.32,
++            )
++    except Exception as exc:
++        logger.warning("MuseGuide idle return setup failed: %s -> %s", idle_avatar_id, exc)
++
++
  # ─── 路由处理函数 ──────────────────────────────────────────────────────────
  
  async def human(request):
-@@ -72,6 +165,44 @@ async def human(request):
+@@ -72,6 +193,47 @@ async def human(request):
          return json_error(str(e))
  
  
@@ -303,12 +448,15 @@ index 37e7d57..3a4b0f2 100644
 +        if params.get("interrupt", True):
 +            avatar_session.flush_talk()
 +
++        persona_id = params.get("persona_id", "woman_demo")
++        video_state = params.get("video_state", "IDLE")
 +        state_info = _switch_museguide_avatar(
 +            request,
 +            avatar_session,
-+            params.get("persona_id", "woman_demo"),
-+            params.get("video_state", "IDLE"),
++            persona_id,
++            video_state,
 +        )
++        _configure_idle_return(request, avatar_session, persona_id, video_state)
 +
 +        datainfo = {}
 +        if params.get("tts"):
@@ -317,7 +465,7 @@ index 37e7d57..3a4b0f2 100644
 +        avatar_session.put_msg_txt(text, datainfo)
 +        return json_ok({
 +            "sessionid": sessionid,
-+            "video_state": _normalize_museguide_state(params.get("video_state", "IDLE")),
++            "video_state": _normalize_museguide_state(video_state),
 +            **state_info,
 +        })
 +    except Exception as e:
@@ -328,7 +476,7 @@ index 37e7d57..3a4b0f2 100644
  async def interrupt_talk(request):
      """打断当前说话"""
      try:
-@@ -155,6 +286,7 @@ async def is_speaking(request):
+@@ -155,6 +317,7 @@ async def is_speaking(request):
  def setup_routes(app):
      """注册所有路由到 aiohttp app"""
      app.router.add_post("/human", human)
