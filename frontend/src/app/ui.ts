@@ -9,11 +9,7 @@ export function renderApp(root: HTMLElement) {
     <header class="navbar">
       <div class="nav-inner">
         <div class="nav-brand">
-          <img src="/logo.png" class="nav-logo" />
-          <div class="nav-title">
-            <span class="nav-title-main">中华世纪坛</span>
-            <span class="nav-title-sub">导览数字人系统</span>
-          </div>
+          <img src="/museguide-logo.svg" class="nav-logo" alt="MuseGuide" />
         </div>
         <nav class="nav-links">
           <a href="#" class="nav-link active" data-page="landing">首页</a>
@@ -43,7 +39,7 @@ export function renderApp(root: HTMLElement) {
         <div class="landing-content">
           <div class="landing-kicker">MuseGuide · Real-time AI Docent</div>
           <h1 class="landing-title">
-            让博物馆拥有会讲解、会回应、会带路的实时数字人导览员
+            <img src="/museguide-logo.svg" class="landing-logo" alt="MuseGuide" />
           </h1>
           <p class="landing-subtitle">
             以 LLM 调度展陈语境，以 TTS 驱动实时口型，以多状态视频承载导览动作，让馆方把一次演示变成可运营、可维护、可扩展的智慧导览入口。
@@ -200,7 +196,7 @@ export function renderApp(root: HTMLElement) {
     <section class="collections-page page hidden" id="collectionsPage">
       <div class="collections-hero">
         <div class="collections-hero-title">数字典藏</div>
-        <div class="collections-hero-sub">中华世纪坛导览 · 展区与展品总览</div>
+        <div class="collections-hero-sub">MuseGuide 导览 · 展区与展品总览</div>
       </div>
       <div class="collections-root" id="collectionsRoot"></div>
     </section>

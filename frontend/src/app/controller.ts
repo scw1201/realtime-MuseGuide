@@ -227,7 +227,7 @@ export function createController(ui: UI) {
   ) {
     const name = zoneName || '展馆前台'
     const loc = zoneLocationMap.get(name) || {}
-    const resolvedVenue = venue || '中华世纪坛'
+    const resolvedVenue = venue || 'MuseGuide'
     const resolvedFloor = floor || loc.floor || ''
     const resolvedArea = area || loc.area || ''
     const parts = [resolvedVenue, resolvedFloor, resolvedArea, name].filter(Boolean)
@@ -535,7 +535,7 @@ export function createController(ui: UI) {
       if (ui.badgeDesc) ui.badgeDesc.textContent = persona.stateDescriptions['IDLE'] || '静待观众'
       if (ui.badgeText) ui.badgeText.textContent = '导览状态'
       if (ui.contextZone) {
-        ui.contextZone.textContent = formatZoneDisplay('展馆前台').replace(/^中华世纪坛 · /, '')
+        ui.contextZone.textContent = formatZoneDisplay('展馆前台').replace(/^MuseGuide · /, '')
       }
       updateContextMap('展馆一层')
       updateStageBg('展馆前台')
