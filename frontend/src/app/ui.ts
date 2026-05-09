@@ -60,8 +60,9 @@ export function renderApp(root: HTMLElement) {
       </div>
 
       <section class="landing-mission" id="landingCapabilities">
-        <p>
-          为博物馆建立全新的导览基础设施：以<strong>数字导览员</strong>为核心的人形交互界面。
+        <p class="landing-mission-copy">
+          <span class="landing-mission-line landing-mission-lead">为博物馆建立全新的导览基础设施：</span>
+          <span class="landing-mission-line landing-mission-core">以<strong>数字导览员</strong>为核心的人形交互界面。</span>
         </p>
       </section>
 

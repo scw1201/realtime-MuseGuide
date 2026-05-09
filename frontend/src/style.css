@@ -259,7 +259,7 @@ body.mode-landing .nav-link:hover {
    ============================ */
 .landing-page {
   min-height: 100vh;
-  padding: clamp(620px, 48.08vw, 980px) 0 88px;
+  padding: clamp(680px, 56.31vw, 1080px) 0 88px;
   position: relative;
   overflow: visible;
   background: #ffffff;
@@ -267,7 +267,7 @@ body.mode-landing .nav-link:hover {
 
 .landing-video-shell {
   width: 100vw;
-  height: clamp(620px, 48.08vw, 980px);
+  height: clamp(680px, 56.31vw, 1080px);
   margin: 0;
   position: absolute;
   top: 0;
@@ -491,22 +491,35 @@ body.mode-landing .nav-link:hover {
   z-index: 3;
   background: #ffffff;
   color: #080806;
-  min-height: clamp(620px, 72vh, 840px);
+  min-height: clamp(760px, 96vh, 1040px);
   display: grid;
   place-items: center;
-  padding: clamp(84px, 11vw, 150px) max(24px, 6vw);
+  padding: clamp(160px, 18vw, 260px) max(24px, 6vw) clamp(180px, 18vw, 260px);
 }
 
-.landing-mission p {
+.landing-mission-copy {
   max-width: 1120px;
   margin: 0 auto;
   color: #030303;
-  font-size: clamp(38px, 5.2vw, 78px);
-  font-weight: 650;
-  line-height: 1.28;
-  letter-spacing: 0.012em;
+  font-weight: 680;
+  line-height: 1.34;
+  letter-spacing: 0.035em;
   text-align: center;
   text-wrap: balance;
+}
+
+.landing-mission-line {
+  display: block;
+}
+
+.landing-mission-lead {
+  font-size: clamp(28px, 3.8vw, 58px);
+}
+
+.landing-mission-core {
+  margin-top: 22px;
+  font-size: clamp(40px, 5.5vw, 82px);
+  line-height: 1.18;
 }
 
 .landing-mission strong {
@@ -2205,12 +2218,12 @@ body:not(.mode-home) .chatbar {
 
   .landing-page {
     min-height: auto;
-    padding: 620px 0 54px;
+    padding: 640px 0 54px;
   }
 
   .landing-video-shell {
     width: 100%;
-    height: 620px;
+    height: 640px;
     margin-top: 0;
     border-radius: 0;
   }
@@ -2248,16 +2261,25 @@ body:not(.mode-home) .chatbar {
   }
 
   .landing-mission {
-    padding: 58px 18px 42px;
+    min-height: 760px;
+    padding: 130px 18px 150px;
   }
 
-  .landing-mission p {
-    font-size: clamp(38px, 12vw, 58px);
-    letter-spacing: -0.07em;
+  .landing-mission-copy {
+    letter-spacing: 0.02em;
+  }
+
+  .landing-mission-lead {
+    font-size: clamp(25px, 7.4vw, 38px);
+  }
+
+  .landing-mission-core {
+    margin-top: 16px;
+    font-size: clamp(34px, 10vw, 54px);
   }
 
   .landing-product {
-    padding: 0 18px 72px;
+    padding: 82px 18px 72px;
   }
 
   .landing-section-title {
