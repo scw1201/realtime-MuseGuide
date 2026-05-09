@@ -13,7 +13,7 @@ export function renderApp(root: HTMLElement) {
         </div>
         <nav class="nav-links">
           <a href="#" class="nav-link active" data-page="landing">首页</a>
-          <a href="#" class="nav-link" data-page="home">实时 Demo</a>
+          <a href="#" class="nav-link" data-page="home">免费体验</a>
           <a href="#" class="nav-link" data-page="route">展陈路线</a>
           <a href="#" class="nav-link" data-page="collections">数字典藏</a>
           <a href="#" class="nav-link" data-page="analytics">数据看板</a>
@@ -44,7 +44,7 @@ export function renderApp(root: HTMLElement) {
           </p>
           <div class="landing-actions">
             <button class="landing-cta primary" type="button" data-jump-page="home">
-              进入实时 Demo
+              进入免费体验
             </button>
             <button class="landing-cta secondary" type="button" data-scroll-target="landingCapabilities">
               查看能力亮点
@@ -100,14 +100,15 @@ export function renderApp(root: HTMLElement) {
           </div>
           <div class="sidebar-panel" id="progressSidebarPanel">
             <div class="progress-root" id="progressRoot"></div>
-            <div class="progress-preview" id="progressPreview">
-              <div class="progress-preview-label" id="progressPreviewLabel">当前导览预览</div>
-              <div class="progress-preview-title" id="progressPreviewTitle">尚未进入展区</div>
-              <img class="progress-preview-image hidden" id="progressPreviewImage" alt="当前展区或展品预览" />
-              <div class="progress-preview-empty" id="progressPreviewEmpty">开始导览后，这里会显示当前展区或展品图片。</div>
-            </div>
           </div>
         </aside>
+
+        <div class="progress-preview hidden" id="progressPreview">
+          <div class="progress-preview-label" id="progressPreviewLabel">当前导览预览</div>
+          <div class="progress-preview-title" id="progressPreviewTitle">尚未进入展区</div>
+          <img class="progress-preview-image hidden" id="progressPreviewImage" alt="当前展区或展品预览" />
+          <div class="progress-preview-empty" id="progressPreviewEmpty">开始导览后，这里会显示当前展区或展品图片。</div>
+        </div>
 
         <!-- 当前人物信息 -->
         <section class="persona-panel" id="personaPanel">

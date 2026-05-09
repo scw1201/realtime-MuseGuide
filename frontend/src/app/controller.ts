@@ -409,7 +409,19 @@ export function createController(ui: UI) {
   }
 
   function renderProgressPreview() {
-    if (!ui.progressPreviewTitle || !ui.progressPreviewImage || !ui.progressPreviewEmpty) return
+    if (!ui.progressPreview || !ui.progressPreviewTitle || !ui.progressPreviewImage || !ui.progressPreviewEmpty) return
+
+    const hasPreviewTarget = Boolean(currentZoneId || currentExhibitId)
+    if (!hasPreviewTarget) {
+      ui.progressPreview.classList.add('hidden')
+      ui.progressPreviewTitle.textContent = '尚未进入展区'
+      ui.progressPreviewImage.removeAttribute('src')
+      ui.progressPreviewImage.classList.add('hidden')
+      ui.progressPreviewEmpty.classList.remove('hidden')
+      return
+    }
+
+    ui.progressPreview.classList.remove('hidden')
 
     const exhibitImage = currentExhibitId ? exhibitIdToImage.get(currentExhibitId) || '' : ''
     const zoneImage = currentZoneId ? zoneIdToPreviewImage.get(currentZoneId) || '' : ''

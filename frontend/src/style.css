@@ -526,6 +526,17 @@ body.mode-landing .nav-link:hover {
   50% { box-shadow: 0 20px 54px rgba(212,164,91,0.18); }
 }
 
+@keyframes progressPreviewFloat {
+  from {
+    opacity: 0;
+    transform: translateX(-10px) translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1);
+  }
+}
+
 .stage-card,
 .collections-hero,
 .zone-card,
@@ -1035,12 +1046,20 @@ body.mode-landing .nav-link:hover {
 }
 
 .progress-preview {
-  flex: 0 0 auto;
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px solid rgba(214, 179, 120, 0.16);
-  background: rgba(12, 9, 6, 0.46);
-  box-shadow: 0 12px 24px rgba(6, 4, 2, 0.18);
+  position: absolute;
+  z-index: 150;
+  top: 186px;
+  left: calc(18px + var(--sidebar-width));
+  width: min(336px, calc(100% - var(--sidebar-width) - 42px));
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(214, 179, 120, 0.24);
+  background: linear-gradient(180deg, rgba(18, 13, 9, 0.82), rgba(10, 8, 6, 0.68));
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  animation: progressPreviewFloat 0.28s ease-out;
 }
 
 .progress-preview-label {
@@ -2036,6 +2055,12 @@ body:not(.mode-home) .chatbar {
     width: calc(100% - 108px);
   }
 
+  .progress-preview {
+    top: 188px;
+    left: 84px;
+    width: calc(100% - 108px);
+  }
+
   .liveavatar-log-line {
     grid-template-columns: 66px 1fr;
   }
@@ -2238,7 +2263,7 @@ body:not(.mode-home) .chatbar {
 
 .admin-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
 }
 
@@ -2581,7 +2606,7 @@ body:not(.mode-home) .chatbar {
 }
 
 .analytics-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .analytics-card {
@@ -2656,30 +2681,35 @@ body:not(.mode-home) .chatbar {
 
 .analytics-grid > .analytics-card:nth-child(1) {
   --analytics-accent: rgba(212, 164, 91, 0.24);
+  grid-column: span 3;
 }
 
 .analytics-grid > .analytics-card:nth-child(2) {
   --analytics-accent: rgba(127, 176, 162, 0.24);
   --analytics-glow: rgba(127, 176, 162, 0.1);
   --analytics-sheen: rgba(127, 176, 162, 0.08);
+  grid-column: span 3;
 }
 
 .analytics-grid > .analytics-card:nth-child(3) {
   --analytics-accent: rgba(113, 170, 220, 0.24);
   --analytics-glow: rgba(113, 170, 220, 0.1);
   --analytics-sheen: rgba(113, 170, 220, 0.08);
+  grid-column: span 2;
 }
 
 .analytics-grid > .analytics-card:nth-child(4) {
   --analytics-accent: rgba(193, 136, 102, 0.24);
   --analytics-glow: rgba(193, 136, 102, 0.1);
   --analytics-sheen: rgba(193, 136, 102, 0.08);
+  grid-column: span 2;
 }
 
 .analytics-grid > .analytics-card:nth-child(5) {
   --analytics-accent: rgba(144, 137, 214, 0.24);
   --analytics-glow: rgba(144, 137, 214, 0.1);
   --analytics-sheen: rgba(144, 137, 214, 0.08);
+  grid-column: span 2;
 }
 
 .analytics-card-full {
@@ -2942,5 +2972,9 @@ body:not(.mode-home) .chatbar {
   .analytics-grid,
   .analytics-overview {
     grid-template-columns: 1fr;
+  }
+
+  .analytics-grid > .analytics-card {
+    grid-column: auto;
   }
 }
