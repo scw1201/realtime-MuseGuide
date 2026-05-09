@@ -150,6 +150,7 @@ body.mode-home::after {
   border-bottom: 0 !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
+  mix-blend-mode: difference;
   pointer-events: none;
   transform: translate3d(0, 0, 0) !important;
   will-change: transform;
@@ -179,8 +180,7 @@ body.mode-home::after {
   width: 142px;
   height: auto;
   display: block;
-  filter: drop-shadow(0 2px 10px rgba(0,0,0,0.48));
-  transition: filter 0.24s ease;
+  filter: none;
 }
 
 .nav-links {
@@ -223,14 +223,6 @@ body.mode-landing .nav-link:hover {
   color: currentColor;
   border-color: currentColor;
   background: transparent;
-}
-
-body.nav-on-light .navbar {
-  color: #050505;
-}
-
-body.nav-on-light .nav-logo {
-  filter: invert(1);
 }
 
 /* ============================
