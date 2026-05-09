@@ -156,6 +156,7 @@ body.mode-home::after {
   pointer-events: none;
   transform: translate3d(0, 0, 0) !important;
   will-change: transform;
+  isolation: isolate;
 }
 
 .nav-inner {
@@ -262,7 +263,6 @@ body.mode-landing .nav-link:hover {
   min-height: 100vh;
   padding: clamp(620px, 48.08vw, 980px) 0 88px;
   position: relative;
-  isolation: isolate;
   overflow: visible;
   background: #ffffff;
 }
@@ -271,11 +271,11 @@ body.mode-landing .nav-link:hover {
   width: 100vw;
   height: clamp(620px, 48.08vw, 980px);
   margin: 0;
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1;
+  z-index: 0;
   overflow: hidden;
   border-radius: 0;
   border: 0;
@@ -308,7 +308,7 @@ body.mode-landing .nav-link:hover {
 .landing-content {
   position: absolute;
   inset: var(--nav-height) 24px 0;
-  z-index: 2;
+  z-index: 20;
   max-width: 1080px;
   margin: 0 auto;
   display: flex;
