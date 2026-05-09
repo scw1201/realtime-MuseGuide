@@ -9,6 +9,10 @@ VIDEO_ROOT="${VIDEO_ROOT:-livetalking/test_videos}"
 LIVETALKING_ROOT="${LIVETALKING_ROOT:-livetalking}"
 FACE_DET_BATCH_SIZE="${FACE_DET_BATCH_SIZE:-8}"
 IMG_SIZE="${IMG_SIZE:-256}"
+PAD_TOP="${PAD_TOP:-0}"
+PAD_BOTTOM="${PAD_BOTTOM:-28}"
+PAD_LEFT="${PAD_LEFT:-0}"
+PAD_RIGHT="${PAD_RIGHT:-0}"
 ALIGNED_WIDTH="${ALIGNED_WIDTH:-1176}"
 ALIGNED_HEIGHT="${ALIGNED_HEIGHT:-1764}"
 ALIGNED_FPS="${ALIGNED_FPS:-25}"
@@ -114,6 +118,7 @@ PY
       --video_path "../${video_path}" \
       --avatar_id "${avatar_id}" \
       --img_size "${IMG_SIZE}" \
+      --pads "${PAD_TOP}" "${PAD_BOTTOM}" "${PAD_LEFT}" "${PAD_RIGHT}" \
       --face_det_batch_size "${FACE_DET_BATCH_SIZE}"
   )
 done

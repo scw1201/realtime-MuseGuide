@@ -1,3 +1,26 @@
+diff --git a/app.py b/app.py
+index 30c19f6..b8ad627 100644
+--- a/app.py
++++ b/app.py
+@@ -94,6 +94,7 @@ def build_avatar_session(sessionid:str, params:dict)->BaseAvatar:
+         opt_this.customopt = json.loads(custom_config)
+ 
+     avatar_session = registry.create("avatar", opt.model, opt=opt_this, model=model, avatar=avatar_this)
++    avatar_session.current_avatar_id = avatar_id
+     return avatar_session
+ 
+ async def offer(request):
+@@ -152,6 +153,10 @@ def main():
+     #############################################################################
+     appasync = web.Application(client_max_size=1024**2*100)
+     appasync["llm_response"] = llm_response
++    appasync["museguide_model"] = opt.model
++    appasync["museguide_default_avatar_id"] = opt.avatar_id
++    appasync["museguide_global_avatars"] = global_avatars
++    appasync["museguide_load_avatar"] = load_avatar
+ 
+     appasync.on_shutdown.append(on_shutdown)
+     appasync.router.add_post("/offer", offer)
 diff --git a/avatars/base_avatar.py b/avatars/base_avatar.py
 index c90fc41..3c3f821 100644
 --- a/avatars/base_avatar.py
@@ -55,3 +78,200 @@ index c90fc41..3c3f821 100644
          process_quit_event.set()
          process_thread.join()
 -
+diff --git a/avatars/wav2lip/genavatar.py b/avatars/wav2lip/genavatar.py
+index 4b645e1..4bf479c 100644
+--- a/avatars/wav2lip/genavatar.py
++++ b/avatars/wav2lip/genavatar.py
+@@ -89,6 +89,8 @@ def face_detect(images):
+ 		y2 = min(image.shape[0], rect[3] + pady2)
+ 		x1 = max(0, rect[0] - padx1)
+ 		x2 = min(image.shape[1], rect[2] + padx2)
++		if y2 <= y1 or x2 <= x1:
++			raise ValueError(f'Invalid crop box after padding: {(x1, y1, x2, y2)}')
+ 		
+ 		results.append([x1, y1, x2, y2])
+ 
+diff --git a/avatars/wav2lip_avatar.py b/avatars/wav2lip_avatar.py
+index 85a2eb0..4a84e53 100644
+--- a/avatars/wav2lip_avatar.py
++++ b/avatars/wav2lip_avatar.py
+@@ -48,6 +48,7 @@ from registry import register
+ 
+ device = initialize_device()
+ logger.info('Using {} for inference.'.format(device))
++MOUTH_FOCUS_RATIO = 0.46
+ 
+ def _load(checkpoint_path):
+     if device == 'cuda':
+@@ -126,7 +127,8 @@ class LipReal(BaseAvatar):
+         img_batch, audiofeat_batch = np.asarray(img_batch), np.asarray(audiofeat_batch)
+ 
+         img_masked = img_batch.copy()
+-        img_masked[:, face.shape[0]//2:] = 0
++        mask_start = max(1, min(face.shape[0] - 1, int(face.shape[0] * MOUTH_FOCUS_RATIO)))
++        img_masked[:, mask_start:] = 0
+ 
+         img_batch = np.concatenate((img_masked, img_batch), axis=3) / 255.
+         audiofeat_batch = np.reshape(audiofeat_batch, [len(audiofeat_batch), audiofeat_batch.shape[1], audiofeat_batch.shape[2], 1])
+@@ -146,4 +148,3 @@ class LipReal(BaseAvatar):
+         res_frame = cv2.resize(pred_frame.astype(np.uint8),(x2-x1,y2-y1))
+         combine_frame[y1:y2, x1:x2] = res_frame
+         return combine_frame
+-
+diff --git a/server/routes.py b/server/routes.py
+index 37e7d57..3a4b0f2 100644
+--- a/server/routes.py
++++ b/server/routes.py
+@@ -38,6 +38,99 @@ def get_session(request, sessionid: str):
+     return session_manager.get_session(sessionid)
+ 
+ 
++MUSEGUIDE_ALLOWED_STATES = {
++    "IDLE",
++    "LISTENING",
++    "GREETING_SELF",
++    "EXPLAIN_DETAILED",
++    "POINTING_DIRECTION",
++    "FOCUS_EXHIBIT",
++}
++
++
++def _normalize_museguide_state(value: str) -> str:
++    state = str(value or "").strip().upper()
++    return state if state in MUSEGUIDE_ALLOWED_STATES else "IDLE"
++
++
++def _live_avatar_state(persona_id: str, video_state: str) -> str:
++    state = _normalize_museguide_state(video_state)
++    if str(persona_id or "").strip() == "woman_demo":
++        if state == "GREETING_SELF":
++            return "GREETING_SELF"
++        if state == "IDLE" or state == "LISTENING":
++            return "IDLE"
++        return "FOCUS_EXHIBIT"
++    return state
++
++
++def _museguide_avatar_candidates(persona_id: str, video_state: str) -> list[str]:
++    persona = str(persona_id or "woman_demo").strip() or "woman_demo"
++    state = _live_avatar_state(persona, video_state)
++    return [
++        f"{persona}_{state}",
++        f"{persona}_IDLE",
++    ]
++
++
++def _apply_avatar_payload(avatar_session, model_name: str, payload) -> None:
++    if model_name == "wav2lip":
++        (
++            avatar_session.frame_list_cycle,
++            avatar_session.face_list_cycle,
++            avatar_session.coord_list_cycle,
++        ) = payload
++        return
++    if model_name == "musetalk":
++        (
++            avatar_session.frame_list_cycle,
++            avatar_session.mask_list_cycle,
++            avatar_session.coord_list_cycle,
++            avatar_session.mask_coords_list_cycle,
++            avatar_session.input_latent_list_cycle,
++        ) = payload
++        return
++    raise ValueError(f"Unsupported MuseGuide live model: {model_name}")
++
++
++def _switch_museguide_avatar(request, avatar_session, persona_id: str, video_state: str) -> dict:
++    model_name = request.app.get("museguide_model", "")
++    default_avatar_id = request.app.get("museguide_default_avatar_id", "")
++    global_avatars = request.app.get("museguide_global_avatars", {})
++    load_avatar = request.app.get("museguide_load_avatar")
++    attempted = []
++
++    for avatar_id in _museguide_avatar_candidates(persona_id, video_state):
++        attempted.append(avatar_id)
++        try:
++            if avatar_id not in global_avatars:
++                if load_avatar is None:
++                    raise RuntimeError("LiveTalking load_avatar is not configured")
++                global_avatars[avatar_id] = load_avatar(avatar_id)
++            _apply_avatar_payload(avatar_session, model_name, global_avatars[avatar_id])
++            avatar_session.current_avatar_id = avatar_id
++            if hasattr(avatar_session, "init_customindex"):
++                avatar_session.init_customindex()
++            return {
++                "avatar_id": avatar_id,
++                "fallback": avatar_id != attempted[0],
++                "attempted": attempted,
++            }
++        except Exception as exc:
++            logger.warning("MuseGuide avatar switch failed: %s -> %s", avatar_id, exc)
++
++    if default_avatar_id and default_avatar_id in global_avatars:
++        _apply_avatar_payload(avatar_session, model_name, global_avatars[default_avatar_id])
++        avatar_session.current_avatar_id = default_avatar_id
++        return {
++            "avatar_id": default_avatar_id,
++            "fallback": True,
++            "attempted": attempted + [default_avatar_id],
++        }
++
++    raise RuntimeError(f"No usable MuseGuide avatar found. attempted={attempted}")
++
++
+ # ─── 路由处理函数 ──────────────────────────────────────────────────────────
+ 
+ async def human(request):
+@@ -72,6 +165,44 @@ async def human(request):
+         return json_error(str(e))
+ 
+ 
++async def museguide_speak(request):
++    """MuseGuide integration: switch state avatar, then speak supplied LLM text."""
++    try:
++        params: dict = await request.json()
++        sessionid: str = params.get('sessionid', '')
++        avatar_session = get_session(request, sessionid)
++        if avatar_session is None:
++            return json_error("session not found")
++
++        text = str(params.get("text", "")).strip()
++        if not text:
++            return json_error("text is required")
++
++        if params.get("interrupt", True):
++            avatar_session.flush_talk()
++
++        state_info = _switch_museguide_avatar(
++            request,
++            avatar_session,
++            params.get("persona_id", "woman_demo"),
++            params.get("video_state", "IDLE"),
++        )
++
++        datainfo = {}
++        if params.get("tts"):
++            datainfo["tts"] = params.get("tts")
++
++        avatar_session.put_msg_txt(text, datainfo)
++        return json_ok({
++            "sessionid": sessionid,
++            "video_state": _normalize_museguide_state(params.get("video_state", "IDLE")),
++            **state_info,
++        })
++    except Exception as e:
++        logger.exception('museguide_speak exception:')
++        return json_error(str(e))
++
++
+ async def interrupt_talk(request):
+     """打断当前说话"""
+     try:
+@@ -155,6 +286,7 @@ async def is_speaking(request):
+ def setup_routes(app):
+     """注册所有路由到 aiohttp app"""
+     app.router.add_post("/human", human)
++    app.router.add_post("/museguide/speak", museguide_speak)
+     app.router.add_post("/humanaudio", humanaudio)
+     app.router.add_post("/set_audiotype", set_audiotype)
+     app.router.add_post("/record", record)

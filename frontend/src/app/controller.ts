@@ -87,7 +87,7 @@ export function createController(ui: UI) {
   let autoTimer: number | null = null
   let pendingAutoText: string | null = null
   const autoAdvanceEnabled = false
-  const liveAvatarPreconnectEnabled = false
+  const liveAvatarPreconnectEnabled = true
   let guideReplyCount = 0
   let lastGuideStage = ''
   let lastZoneId = ''
