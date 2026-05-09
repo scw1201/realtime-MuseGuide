@@ -167,7 +167,6 @@ body.mode-home::after {
   box-shadow:
     0 16px 38px rgba(0, 0, 0, 0.38),
     inset 0 1px 0 rgba(255, 255, 255, 0.045);
-  backdrop-filter: blur(14px) saturate(1.12);
   pointer-events: none;
 }
 
