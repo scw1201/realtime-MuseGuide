@@ -65,7 +65,8 @@ export class LiveAvatarEngine {
         const [stream] = event.streams
         if (!stream) return
         this.video.srcObject = stream
-        this.video.muted = false
+        // Auto-started WebRTC streams are often blocked unless muted first.
+        this.video.muted = true
         this.video.playsInline = true
         this.video.autoplay = true
         this.video.play().catch(() => {})
@@ -133,6 +134,8 @@ export class LiveAvatarEngine {
   async speak(text: string, videoState = 'IDLE', voiceType?: string, personaId = 'woman_demo') {
     const clean = text.trim()
     if (!clean || !this.connected || !this.sessionId) return false
+    this.video.muted = false
+    this.video.play().catch(() => {})
     this.log('speak_text', `${videoState} · ${clean.length} chars`)
     this.callbacks.onSpeakStart?.()
 
