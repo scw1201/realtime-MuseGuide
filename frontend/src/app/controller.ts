@@ -606,7 +606,6 @@ export function createController(ui: UI) {
   setPersona(currentPersonaId)
   loadZoneFloors()
   loadPersonaCopy()
-  preconnectLiveAvatar()
 
   function renderSuggestionButtons(actions: SuggestedAction[]) {
     if (!hasConversationStarted && !actions.length) {
@@ -874,5 +873,11 @@ export function createController(ui: UI) {
     return startGuideTextMap.get(currentPersonaId) || persona?.startGuideText || '开始导览'
   }
 
-  return { send: submitUserInput, submitUserInput, getStartGuideCommand, reloadContentConfig }
+  return {
+    send: submitUserInput,
+    submitUserInput,
+    getStartGuideCommand,
+    reloadContentConfig,
+    preconnectLiveAvatar,
+  }
 }

@@ -66,6 +66,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const controller = createController(ui)
 
   const pages: Record<string, HTMLElement | null> = {
+    landing: ui.landingPage,
     home: ui.homePage,
     route: ui.routePage,
     collections: ui.collectionsPage,
@@ -77,6 +78,7 @@ window.addEventListener('DOMContentLoaded', () => {
   let routeLoaded = false
   let adminLoaded = false
   let analyticsLoaded = false
+  let liveDemoPrepared = false
 
   const renderCollections = (data: any) => {
     const zones = (data.zones || []).filter(
@@ -237,6 +239,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   const showPage = async (page: string) => {
+    document.body.classList.toggle('mode-landing', page === 'landing')
     if (page === 'home') {
       document.body.classList.add('mode-home')
     } else {
@@ -279,9 +282,13 @@ window.addEventListener('DOMContentLoaded', () => {
     if (page === 'analytics') {
       await loadAnalytics()
     }
+    if (page === 'home' && !liveDemoPrepared) {
+      liveDemoPrepared = true
+      controller.preconnectLiveAvatar()
+    }
   }
 
-  showPage('home')
+  showPage('landing')
 
   ui.navLinks?.forEach(link => {
     link.onclick = async (e) => {
@@ -290,6 +297,23 @@ window.addEventListener('DOMContentLoaded', () => {
       await showPage(page)
     }
   })
+
+  document
+    .querySelectorAll<HTMLElement>('[data-jump-page]')
+    .forEach(el => {
+      el.addEventListener('click', async () => {
+        await showPage(el.dataset.jumpPage || 'home')
+      })
+    })
+
+  document
+    .querySelectorAll<HTMLElement>('[data-scroll-target]')
+    .forEach(el => {
+      el.addEventListener('click', () => {
+        const target = document.getElementById(el.dataset.scrollTarget || '')
+        target?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+    })
 
   /* ============================
      键盘输入

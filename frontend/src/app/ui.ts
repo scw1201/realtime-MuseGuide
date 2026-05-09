@@ -16,7 +16,8 @@ export function renderApp(root: HTMLElement) {
           </div>
         </div>
         <nav class="nav-links">
-          <a href="#" class="nav-link active" data-page="home">导览大厅</a>
+          <a href="#" class="nav-link active" data-page="landing">首页</a>
+          <a href="#" class="nav-link" data-page="home">实时 Demo</a>
           <a href="#" class="nav-link" data-page="route">展陈路线</a>
           <a href="#" class="nav-link" data-page="collections">数字典藏</a>
           <a href="#" class="nav-link" data-page="analytics">数据看板</a>
@@ -26,8 +27,65 @@ export function renderApp(root: HTMLElement) {
       </div>
     </header>
 
+    <section class="landing-page page" id="landingPage">
+      <div class="landing-video-shell" aria-hidden="true">
+        <video
+          class="landing-video"
+          autoplay
+          muted
+          loop
+          playsinline
+          poster="/poster.png"
+        >
+          <source src="/landing/concept.mp4" type="video/mp4" />
+        </video>
+        <div class="landing-video-overlay"></div>
+      </div>
+
+      <div class="landing-content">
+        <div class="landing-kicker">MuseGuide · Real-time AI Docent</div>
+        <h1 class="landing-title">
+          让博物馆拥有会讲解、会回应、会带路的实时数字人导览员
+        </h1>
+        <p class="landing-subtitle">
+          以 LLM 调度展陈语境，以 TTS 驱动实时口型，以多状态视频承载导览动作，让馆方把一次演示变成可运营、可维护、可扩展的智慧导览入口。
+        </p>
+        <div class="landing-actions">
+          <button class="landing-cta primary" type="button" data-jump-page="home">
+            进入实时 Demo
+          </button>
+          <button class="landing-cta secondary" type="button" data-scroll-target="landingCapabilities">
+            查看能力亮点
+          </button>
+        </div>
+        <div class="landing-proof">
+          <span>实时口型对齐</span>
+          <span>状态视频调度</span>
+          <span>馆方内容后台</span>
+        </div>
+      </div>
+
+      <div class="landing-capabilities" id="landingCapabilities">
+        <article class="landing-capability">
+          <span class="capability-index">01</span>
+          <h2>实时数字人讲解</h2>
+          <p>接入实时口型链路，让 LLM 返回的话直接变成可听、可看的导览员表达。</p>
+        </article>
+        <article class="landing-capability">
+          <span class="capability-index">02</span>
+          <h2>多状态视频调度</h2>
+          <p>问候、聚焦、细致讲解、待机等状态由导览语义驱动，减少“只会播一个视频”的机械感。</p>
+        </article>
+        <article class="landing-capability">
+          <span class="capability-index">03</span>
+          <h2>可维护内容中台</h2>
+          <p>展区、展品、人物文案与数据看板保持在同一套系统里，方便馆方持续运营。</p>
+        </article>
+      </div>
+    </section>
+
     <!-- 主舞台区域 -->
-    <main class="stage-wrap page" id="homePage">
+    <main class="stage-wrap page hidden" id="homePage">
       <div class="stage-card" id="stageCard">
         <!-- 侧边人物栏 -->
         <aside class="persona-sidebar" id="personaSidebar">
@@ -179,6 +237,7 @@ export function getUI() {
     liveAvatarStatus: document.getElementById('liveAvatarStatus') as HTMLSpanElement,
     liveAvatarLogToggle: document.getElementById('liveAvatarLogToggle') as HTMLButtonElement,
     liveAvatarLog: document.getElementById('liveAvatarLog') as HTMLDivElement,
+    landingPage: document.getElementById('landingPage') as HTMLElement,
     stageCard: document.getElementById('stageCard') as HTMLDivElement,
     avatarFrame: document.getElementById('avatarFrame') as HTMLDivElement,
     personaSidebar: document.getElementById('personaSidebar') as HTMLDivElement,
