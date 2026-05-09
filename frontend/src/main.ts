@@ -238,8 +238,14 @@ window.addEventListener('DOMContentLoaded', () => {
     })
   }
 
+  const syncLandingNavTone = () => {
+    const shouldUseSolidNav = document.body.classList.contains('mode-landing') && window.scrollY > 80
+    document.body.classList.toggle('landing-solid-nav', shouldUseSolidNav)
+  }
+
   const showPage = async (page: string) => {
     document.body.classList.toggle('mode-landing', page === 'landing')
+    document.body.classList.remove('landing-solid-nav')
     if (page === 'home') {
       document.body.classList.add('mode-home')
     } else {
@@ -286,6 +292,7 @@ window.addEventListener('DOMContentLoaded', () => {
       liveDemoPrepared = true
       controller.preconnectLiveAvatar()
     }
+    syncLandingNavTone()
   }
 
   showPage('landing')
@@ -314,6 +321,8 @@ window.addEventListener('DOMContentLoaded', () => {
         target?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       })
     })
+
+  window.addEventListener('scroll', syncLandingNavTone, { passive: true })
 
   /* ============================
      键盘输入
