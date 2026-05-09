@@ -297,7 +297,7 @@ index 85a2eb0..c6c46aa 100644
 -
 +        return feather_blend_patch(combine_frame, res_frame, y1, y2, x1, x2)
 diff --git a/server/routes.py b/server/routes.py
-index 37e7d57..a27d470 100644
+index 37e7d57..bedd727 100644
 --- a/server/routes.py
 +++ b/server/routes.py
 @@ -38,6 +38,127 @@ def get_session(request, sessionid: str):
@@ -322,11 +322,11 @@ index 37e7d57..a27d470 100644
 +def _live_avatar_state(persona_id: str, video_state: str) -> str:
 +    state = _normalize_museguide_state(video_state)
 +    if str(persona_id or "").strip() == "woman_demo":
-+        if state == "GREETING_SELF":
-+            return "GREETING_SELF"
 +        if state == "IDLE" or state == "LISTENING":
 +            return "IDLE"
-+        return "FOCUS_EXHIBIT"
++        if state in {"GREETING_SELF", "EXPLAIN_DETAILED", "FOCUS_EXHIBIT"}:
++            return state
++        return "EXPLAIN_DETAILED"
 +    return state
 +
 +
