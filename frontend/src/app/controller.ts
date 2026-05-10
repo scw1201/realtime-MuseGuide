@@ -339,9 +339,17 @@ export function createController(ui: UI) {
 
   function renderTourProgress() {
     if (!ui.progressRoot) return
-    ui.progressRoot.innerHTML = progressZones.map(zone => {
+    ui.progressRoot.innerHTML = `
+      <ol class="progress-timeline">
+        ${progressZones.map((zone, zoneIndex) => {
       const zoneVisited = visitedZoneIds.has(zone.id)
       const zoneCurrent = currentZoneId === zone.id
+      const visitedCount = zone.exhibits.filter(exhibit => visitedExhibitIds.has(exhibit.id)).length
+      const totalCount = zone.exhibits.length
+      const zoneComplete = totalCount > 0 && visitedCount >= totalCount
+      const zonePartial = !zoneComplete && visitedCount > 0
+      const zoneState = zoneCurrent ? 'active' : zoneComplete ? 'complete' : zonePartial || zoneVisited ? 'partial' : 'pending'
+      const zoneProgressText = totalCount > 0 ? `${visitedCount}/${totalCount} 件展品` : '展厅节点'
       const exhibitItems = zone.exhibits.map(exhibit => {
         const visited = visitedExhibitIds.has(exhibit.id)
         const current = currentExhibitId === exhibit.id
@@ -354,17 +362,28 @@ export function createController(ui: UI) {
       }).join('')
 
       return `
-        <section class="progress-zone ${zoneCurrent ? 'current' : zoneVisited ? 'visited' : 'pending'}">
+        <li class="progress-zone ${zoneState}" style="--progress-delay: ${zoneIndex * 70}ms">
+          <span class="progress-zone-marker" aria-hidden="true">
+            <span class="progress-zone-marker-core"></span>
+          </span>
           <div class="progress-zone-header">
-            <span class="progress-zone-dot"></span>
-            <span class="progress-zone-name">${zone.name}</span>
+            <time class="progress-zone-time">${zoneProgressText}</time>
+            <span class="progress-zone-status">
+              ${zoneState === 'active' ? '导览中' : zoneState === 'complete' ? '已完成' : zoneState === 'partial' ? '进行中' : '未开始'}
+            </span>
+          </div>
+          <h4 class="progress-zone-name">${zone.name}</h4>
+          <div class="progress-zone-body">
+            ${zoneState === 'active' ? '当前正在这里推进导览。' : zoneState === 'complete' ? '本展厅展品已全部讲完。' : zoneState === 'partial' ? '本展厅已有部分展品完成。' : '等待进入该展厅。'}
           </div>
           <div class="progress-exhibit-list">
             ${exhibitItems}
           </div>
-        </section>
+        </li>
       `
-    }).join('')
+    }).join('')}
+      </ol>
+    `
   }
 
   function resetTourProgress() {
