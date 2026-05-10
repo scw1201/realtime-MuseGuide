@@ -65,9 +65,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const ui = getUI()
   const controller = createController(ui)
   const updateNavChrome = () => {
-    const heroHeight = ui.landingPage?.querySelector<HTMLElement>('.landing-video-shell')?.offsetHeight || 0
     const onLandingContent = document.body.classList.contains('mode-landing')
-      && window.scrollY > Math.max(96, heroHeight - 180)
+      && window.scrollY > 120
     document.body.classList.toggle('nav-over-content', onLandingContent)
   }
 

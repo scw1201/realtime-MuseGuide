@@ -150,6 +150,7 @@ body.mode-home::after {
   border-bottom: 0 !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
+  isolation: isolate;
   mix-blend-mode: difference;
   pointer-events: none;
   transform: translate3d(0, 0, 0) !important;
@@ -163,8 +164,10 @@ body.mode-home::after {
   inset: 0 24px;
   z-index: 0;
   opacity: 0;
-  background: rgba(255, 255, 255, 0.58);
-  backdrop-filter: blur(16px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.64));
+  backdrop-filter: blur(22px) saturate(1.12);
+  box-shadow: 0 12px 34px rgba(255, 255, 255, 0.22);
   transition: opacity 0.24s ease;
 }
 
