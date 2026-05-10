@@ -162,11 +162,13 @@ body.mode-home::after {
   z-index: 2147483647 !important;
   color: #080806;
   opacity: 0;
-  background: rgba(244, 244, 240, 0.84) !important;
-  border-bottom: 1px solid rgba(116, 116, 108, 0.28) !important;
-  backdrop-filter: blur(28px) saturate(1.16) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(1.16) !important;
-  box-shadow: 0 18px 46px rgba(12, 12, 10, 0.12) !important;
+  background: rgba(238, 238, 232, 0.94) !important;
+  border-bottom: 1px solid rgba(96, 96, 88, 0.34) !important;
+  backdrop-filter: blur(30px) saturate(1.22) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.22) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.72) inset,
+    0 18px 48px rgba(12, 12, 10, 0.18) !important;
   mix-blend-mode: normal;
   pointer-events: none;
   transition: opacity 0.28s ease;
@@ -184,25 +186,25 @@ body.nav-over-content .navbar-glass {
   opacity: 1;
 }
 
+body[data-nav-glass="on"] .navbar-glass {
+  opacity: 1 !important;
+}
+
+body.nav-over-content .navbar-glass.nav-over-content,
+.navbar-glass.nav-over-content {
+  opacity: 1 !important;
+}
+
 body.nav-over-content .navbar:not(.navbar-glass) {
   opacity: 0;
 }
 
+body[data-nav-glass="on"] .navbar:not(.navbar-glass) {
+  opacity: 0 !important;
+}
+
 body:not(.mode-landing) .navbar-glass {
   opacity: 0;
-}
-
-@supports (animation-timeline: scroll()) {
-  body.mode-landing .navbar-glass {
-    animation: navGlassReveal linear both;
-    animation-timeline: scroll(root block);
-    animation-range: 110px 180px;
-  }
-}
-
-@keyframes navGlassReveal {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 .navbar::before {

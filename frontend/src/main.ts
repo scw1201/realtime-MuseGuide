@@ -65,11 +65,19 @@ window.addEventListener('DOMContentLoaded', () => {
   const ui = getUI()
   const controller = createController(ui)
   const navbar = document.querySelector<HTMLElement>('.navbar')
+  const navGlass = document.querySelector<HTMLElement>('.navbar-glass')
   const updateNavChrome = () => {
+    const missionTop = ui.landingPage
+      ?.querySelector<HTMLElement>('.landing-mission')
+      ?.getBoundingClientRect().top
+    const byMissionPosition = typeof missionTop === 'number' && missionTop < 96
+    const scrollTop = document.scrollingElement?.scrollTop ?? window.scrollY ?? 0
     const onLandingContent = document.body.classList.contains('mode-landing')
-      && window.scrollY > 120
+      && (byMissionPosition || scrollTop > 80)
     document.body.classList.toggle('nav-over-content', onLandingContent)
+    document.body.dataset.navGlass = onLandingContent ? 'on' : 'off'
     navbar?.classList.toggle('nav-over-content', onLandingContent)
+    navGlass?.classList.toggle('nav-over-content', onLandingContent)
   }
 
   const pages: Record<string, HTMLElement | null> = {
@@ -249,7 +257,9 @@ window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.toggle('mode-landing', page === 'landing')
     if (page !== 'landing') {
       document.body.classList.remove('nav-over-content')
+      document.body.dataset.navGlass = 'off'
       navbar?.classList.remove('nav-over-content')
+      navGlass?.classList.remove('nav-over-content')
     }
     if (page === 'home') {
       document.body.classList.add('mode-home')
@@ -300,8 +310,17 @@ window.addEventListener('DOMContentLoaded', () => {
 
   showPage('landing')
   window.setTimeout(updateNavChrome, 0)
+  window.setTimeout(updateNavChrome, 200)
   window.addEventListener('scroll', updateNavChrome, { passive: true })
+  document.addEventListener('scroll', updateNavChrome, { passive: true, capture: true })
+  document.body.addEventListener('scroll', updateNavChrome, { passive: true })
+  document.documentElement.addEventListener('scroll', updateNavChrome, { passive: true })
   window.addEventListener('resize', updateNavChrome)
+  const navChromeLoop = () => {
+    updateNavChrome()
+    window.requestAnimationFrame(navChromeLoop)
+  }
+  window.requestAnimationFrame(navChromeLoop)
 
   ui.navLinks?.forEach(link => {
     link.onclick = async (e) => {
