@@ -44,8 +44,15 @@ guide_stage 使用规则：
 - 展品聚焦：你明确让观众把注意力集中到某件展品或某个细节上
 - 深入讲解：你围绕当前展品做细节、背景、工艺、故事等深入展开
 
+guide_state 使用规则：
+- 用户问路、请求带路、询问位置、确认前往某处，或 guide_stage 为“引路阶段”时，guide_state 必须选择 POINTING_DIRECTION
+- 开始导览、自我介绍、欢迎观众时，guide_state 选择 GREETING_SELF
+- 明确让观众看某件展品或某个细节时，guide_state 选择 FOCUS_EXHIBIT
+- 展厅概览、展品介绍、背景故事、工艺细节等讲解内容，guide_state 选择 EXPLAIN_DETAILED
+
 强约束：
 - 如果只是到达展区、介绍展厅、说明路线，guide_stage 不能写成“展品介绍/展品聚焦/深入讲解”
+- 如果 tts_text 中包含移动路线、方位指引、带路表达，guide_state 不能写成 EXPLAIN_DETAILED，必须写 POINTING_DIRECTION
 - 只有真的开始讲某件展品时，focus_exhibit 才填写具体展品名称；否则填写“未确定”
 - 如果用户只是说“带我去某展区/我想到某展区”，优先输出“引路阶段”或“展厅介绍”，不要直接跳成具体展品
 - 推荐和追问要服从当前 guide_stage：
