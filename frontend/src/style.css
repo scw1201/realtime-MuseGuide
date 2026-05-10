@@ -1306,6 +1306,8 @@ body.mode-landing .landing-page.page.active {
   bottom: 0;
   width: 260px;
   padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
   background: rgba(18, 13, 9, 0.68);
   border-right: 1px solid rgba(214, 179, 120, 0.2);
   backdrop-filter: blur(12px);
@@ -1333,6 +1335,7 @@ body.mode-landing .landing-page.page.active {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 0 0 auto;
   margin-bottom: 14px;
 }
 
@@ -1389,6 +1392,8 @@ body.mode-landing .landing-page.page.active {
 .sidebar-panel {
   display: none;
   min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
 }
 
 .sidebar-panel.active {
@@ -1471,7 +1476,9 @@ body.mode-landing .landing-page.page.active {
   overflow-y: auto;
   overflow-x: visible;
   flex: 1;
+  height: 100%;
   min-height: 0;
+  overscroll-behavior: contain;
   padding: 2px 4px 2px 18px;
   margin-left: -10px;
 }
