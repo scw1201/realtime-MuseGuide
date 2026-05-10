@@ -20,6 +20,20 @@ export function renderApp(root: HTMLElement) {
         </nav>
       </div>
     </header>
+    <header class="navbar navbar-glass" aria-hidden="true">
+      <div class="nav-inner">
+        <div class="nav-brand">
+          <img src="/museguide-logo.svg" class="nav-logo" alt="" />
+        </div>
+        <nav class="nav-links">
+          <span class="nav-link active">首页</span>
+          <span class="nav-link">免费体验</span>
+          <span class="nav-link">展品预览</span>
+          <span class="nav-link">数据看板</span>
+          <span class="nav-link">内容后台</span>
+        </nav>
+      </div>
+    </header>
 
     <section class="landing-page page" id="landingPage">
       <div class="landing-video-shell" aria-hidden="true">

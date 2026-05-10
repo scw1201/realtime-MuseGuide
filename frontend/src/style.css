@@ -158,6 +158,53 @@ body.mode-home::after {
   transition: color 0.24s ease, mix-blend-mode 0.24s ease;
 }
 
+.navbar-glass {
+  z-index: 2147483647 !important;
+  color: #080806;
+  opacity: 0;
+  background: rgba(244, 244, 240, 0.84) !important;
+  border-bottom: 1px solid rgba(116, 116, 108, 0.28) !important;
+  backdrop-filter: blur(28px) saturate(1.16) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.16) !important;
+  box-shadow: 0 18px 46px rgba(12, 12, 10, 0.12) !important;
+  mix-blend-mode: normal;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+
+.navbar-glass .nav-inner {
+  pointer-events: none;
+}
+
+.navbar-glass .nav-logo {
+  filter: invert(1);
+}
+
+body.nav-over-content .navbar-glass {
+  opacity: 1;
+}
+
+body.nav-over-content .navbar:not(.navbar-glass) {
+  opacity: 0;
+}
+
+body:not(.mode-landing) .navbar-glass {
+  opacity: 0;
+}
+
+@supports (animation-timeline: scroll()) {
+  body.mode-landing .navbar-glass {
+    animation: navGlassReveal linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 110px 180px;
+  }
+}
+
+@keyframes navGlassReveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .navbar::before {
   content: "";
   position: absolute;
