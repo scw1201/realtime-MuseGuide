@@ -208,7 +208,7 @@ body:not(.mode-landing) .navbar-glass {
   opacity: 0;
 }
 
-.navbar::before {
+.navbar:not(.navbar-glass)::before {
   content: "";
   position: absolute;
   inset: 0 24px;
@@ -248,9 +248,14 @@ body.nav-over-content .navbar {
     0 16px 42px rgba(12, 12, 10, 0.1) !important;
 }
 
-body.nav-over-content .navbar::before,
-.navbar.nav-over-content::before {
+body.nav-over-content .navbar:not(.navbar-glass)::before,
+.navbar.nav-over-content:not(.navbar-glass)::before {
   opacity: 1;
+}
+
+.navbar-glass::before {
+  display: none !important;
+  content: none !important;
 }
 
 body.nav-over-content .nav-logo,
