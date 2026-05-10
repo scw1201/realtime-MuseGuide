@@ -1701,8 +1701,11 @@ body.mode-landing .landing-page.page.active {
 
 .context-map {
   margin-top: 6px;
+  display: grid;
+  gap: 10px;
 }
 
+.context-hall-img,
 .context-map-img {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -1711,6 +1714,15 @@ body.mode-landing .landing-page.page.active {
   border: 1px solid rgba(214, 179, 120, 0.18);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
   opacity: 0.92;
+}
+
+.context-map-img {
+  aspect-ratio: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
 }
 
 .persona-avatar {

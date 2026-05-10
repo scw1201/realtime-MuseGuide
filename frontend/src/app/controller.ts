@@ -249,11 +249,16 @@ export function createController(ui: UI) {
 
   function updateContextMap(zoneName: string, floorLabel = '') {
     if (!ui.contextMap) return
+
     const zoneId = zoneBgMap.get(zoneName || '') || zoneNameToId.get(zoneName || '')
-    if (zoneId) {
-      ui.contextMap.src = `/bgs/${zoneId}.png`
-      ui.contextMap.style.display = 'block'
-      return
+    if (ui.contextHallImage) {
+      if (zoneId) {
+        ui.contextHallImage.src = `/bgs/${zoneId}.png`
+        ui.contextHallImage.style.display = 'block'
+      } else {
+        ui.contextHallImage.removeAttribute('src')
+        ui.contextHallImage.style.display = 'none'
+      }
     }
 
     const key = floorKeyFromLabel(floorLabel)

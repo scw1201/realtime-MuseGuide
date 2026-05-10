@@ -230,7 +230,8 @@ export function renderApp(root: HTMLElement) {
             <span class="context-text" id="contextPathHint">—</span>
           </div>
           <div class="context-map">
-            <img id="contextMap" class="context-map-img" alt="当前位置示意图" />
+            <img id="contextHallImage" class="context-hall-img" alt="当前展厅预览图" />
+            <img id="contextMap" class="context-map-img" alt="当前楼层示意图" />
           </div>
         </section>
 
@@ -309,6 +310,7 @@ export function getUI() {
     personaRole: document.getElementById('personaRole') as HTMLDivElement,
     personaBio: document.getElementById('personaBio') as HTMLDivElement,
     contextPanel: document.getElementById('contextPanel') as HTMLDivElement,
+    contextHallImage: document.getElementById('contextHallImage') as HTMLImageElement,
     contextMap: document.getElementById('contextMap') as HTMLImageElement,
     contextZone: document.getElementById('contextZone') as HTMLSpanElement,
     contextStage: document.getElementById('contextStage') as HTMLSpanElement,
