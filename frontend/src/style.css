@@ -1473,7 +1473,7 @@ body.mode-landing .landing-page.page.active {
 .progress-preview {
   position: absolute;
   z-index: 150;
-  top: 212px;
+  top: 112px;
   left: calc(18px + var(--sidebar-width));
   width: min(336px, calc(100% - var(--sidebar-width) - 42px));
   padding: 14px;
@@ -1984,11 +1984,20 @@ body.mode-landing .landing-page.page.active {
   --sidebar-width: 72px;
 }
 
-.home-exit {
+.stage-topbar {
   position: absolute;
   top: 18px;
   left: calc(18px + var(--sidebar-width));
   z-index: 170;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - var(--sidebar-width) - 36px);
+  transition: left 0.25s ease;
+}
+
+.home-exit {
+  position: static;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2005,7 +2014,6 @@ body.mode-landing .landing-page.page.active {
   letter-spacing: 0.04em;
   cursor: pointer;
   transition:
-    left 0.25s ease,
     transform 0.25s ease,
     border-color 0.25s ease,
     background 0.25s ease;
@@ -2018,9 +2026,7 @@ body.mode-landing .landing-page.page.active {
 }
 
 .badge {
-  position: absolute;
-  top: 70px;
-  left: calc(18px + var(--sidebar-width));
+  position: static;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -2031,8 +2037,6 @@ body.mode-landing .landing-page.page.active {
   font-size: 17px;
   color: var(--text);
   backdrop-filter: blur(10px);
-  z-index: 130;
-  transition: left 0.25s ease;
 }
 
 .badge-texts {
@@ -2520,16 +2524,19 @@ body:not(.mode-home) .chatbar {
   }
 
   .home-exit {
-    top: 18px;
-    left: 84px;
     min-height: 34px;
     padding: 7px 11px;
     font-size: 12px;
   }
 
-  .badge {
-    top: 62px;
+  .stage-topbar {
+    top: 18px;
     left: 84px;
+    gap: 8px;
+    max-width: calc(100% - 108px);
+  }
+
+  .badge {
     transform: scale(0.92);
     transform-origin: left top;
   }
@@ -2548,7 +2555,7 @@ body:not(.mode-home) .chatbar {
   }
 
   .progress-preview {
-    top: 200px;
+    top: 112px;
     left: 84px;
     width: calc(100% - 108px);
   }

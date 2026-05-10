@@ -161,9 +161,18 @@ export function renderApp(root: HTMLElement) {
     <!-- 主舞台区域 -->
     <main class="stage-wrap page hidden" id="homePage">
       <div class="stage-card" id="stageCard">
-        <button class="home-exit" type="button" data-jump-page="landing">
-          返回首页
-        </button>
+        <div class="stage-topbar">
+          <button class="home-exit" type="button" data-jump-page="landing">
+            返回首页
+          </button>
+          <div class="badge idle" id="badge">
+            <span class="badge-dot"></span>
+            <div class="badge-texts">
+              <span id="badgeText"></span>
+              <span id="badgeDesc">静待观众</span>
+            </div>
+          </div>
+        </div>
 
         <!-- 侧边人物栏 -->
         <aside class="persona-sidebar" id="personaSidebar">
@@ -189,10 +198,10 @@ export function renderApp(root: HTMLElement) {
         </aside>
 
         <div class="progress-preview hidden" id="progressPreview">
-          <div class="progress-preview-label" id="progressPreviewLabel">当前导览预览</div>
-          <div class="progress-preview-title" id="progressPreviewTitle">尚未进入展区</div>
-          <img class="progress-preview-image hidden" id="progressPreviewImage" alt="当前展区或展品预览" />
-          <div class="progress-preview-empty" id="progressPreviewEmpty">开始导览后，这里会显示当前展区或展品图片。</div>
+          <div class="progress-preview-label" id="progressPreviewLabel">当前展品</div>
+          <div class="progress-preview-title" id="progressPreviewTitle">尚未聚焦展品</div>
+          <img class="progress-preview-image hidden" id="progressPreviewImage" alt="当前展品预览" />
+          <div class="progress-preview-empty" id="progressPreviewEmpty">展品状态更新时，这里会短暂显示展品图片。</div>
         </div>
 
         <!-- 当前人物信息 -->
@@ -209,16 +218,12 @@ export function renderApp(root: HTMLElement) {
         <section class="context-panel" id="contextPanel">
           <div class="context-title">导览实况</div>
           <div class="context-line">
-            <span class="context-label">当前位置</span>
+            <span class="context-label">当前展馆</span>
             <span class="context-text" id="contextZone">展馆前台</span>
           </div>
           <div class="context-line">
             <span class="context-label">导览阶段</span>
             <span class="context-text" id="contextStage">准备阶段</span>
-          </div>
-          <div class="context-line">
-            <span class="context-label">关注展品</span>
-            <span class="context-text" id="contextAnchor">—</span>
           </div>
           <div class="context-line context-hint" id="contextHint" style="display:none">
             <span class="context-label">待执行</span>
@@ -246,14 +251,6 @@ export function renderApp(root: HTMLElement) {
           <div class="stage-announce" id="stageAnnounce"></div>
         </div>
 
-        <!-- 状态徽标 -->
-        <div class="badge idle" id="badge">
-          <span class="badge-dot"></span>
-          <div class="badge-texts">
-            <span id="badgeText"></span>
-            <span id="badgeDesc">静待观众</span>
-          </div>
-        </div>
       </div>
     </main>
 

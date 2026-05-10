@@ -84,6 +84,7 @@ export function createController(ui: UI) {
   let currentBgId = 'zone_front_desk'
   let bgTimer: number | null = null
   let progressProofTimer: number | null = null
+  let progressPreviewTimer: number | null = null
   let autoTimer: number | null = null
   let pendingAutoText: string | null = null
   const autoAdvanceEnabled = false
@@ -91,6 +92,7 @@ export function createController(ui: UI) {
   let guideReplyCount = 0
   let lastGuideStage = ''
   let lastZoneId = ''
+  let lastPreviewExhibitId = ''
 
   const personaMap = new Map<string, PersonaInfo>(
     PERSONAS.map(p => [p.id, p])
@@ -411,41 +413,43 @@ export function createController(ui: UI) {
   function renderProgressPreview() {
     if (!ui.progressPreview || !ui.progressPreviewTitle || !ui.progressPreviewImage || !ui.progressPreviewEmpty) return
 
-    const hasPreviewTarget = Boolean(currentZoneId || currentExhibitId)
-    if (!hasPreviewTarget) {
+    if (!currentExhibitId) {
       ui.progressPreview.classList.add('hidden')
-      ui.progressPreviewTitle.textContent = '尚未进入展区'
+      ui.progressPreviewTitle.textContent = '尚未聚焦展品'
       ui.progressPreviewImage.removeAttribute('src')
       ui.progressPreviewImage.classList.add('hidden')
       ui.progressPreviewEmpty.classList.remove('hidden')
+      lastPreviewExhibitId = ''
+      if (progressPreviewTimer) window.clearTimeout(progressPreviewTimer)
       return
     }
 
-    ui.progressPreview.classList.remove('hidden')
+    if (currentExhibitId === lastPreviewExhibitId) return
+    lastPreviewExhibitId = currentExhibitId
 
     const exhibitImage = currentExhibitId ? exhibitIdToImage.get(currentExhibitId) || '' : ''
-    const zoneImage = currentZoneId ? zoneIdToPreviewImage.get(currentZoneId) || '' : ''
-    const previewImage = currentExhibitId ? exhibitImage : zoneImage
-
-    const currentZoneName =
-      progressZones.find(zone => zone.id === currentZoneId)?.name || '尚未进入展区'
     const currentExhibitName =
       progressZones
         .flatMap(zone => zone.exhibits)
-        .find(exhibit => exhibit.id === currentExhibitId)?.name || ''
+        .find(exhibit => exhibit.id === currentExhibitId)?.name || '当前展品'
 
-    ui.progressPreviewTitle.textContent = currentExhibitName || currentZoneName
+    ui.progressPreview.classList.remove('hidden')
+    ui.progressPreviewTitle.textContent = currentExhibitName
 
-    if (previewImage) {
-      ui.progressPreviewImage.src = previewImage
+    if (exhibitImage) {
+      ui.progressPreviewImage.src = exhibitImage
       ui.progressPreviewImage.classList.remove('hidden')
       ui.progressPreviewEmpty.classList.add('hidden')
-      return
+    } else {
+      ui.progressPreviewImage.removeAttribute('src')
+      ui.progressPreviewImage.classList.add('hidden')
+      ui.progressPreviewEmpty.classList.remove('hidden')
     }
 
-    ui.progressPreviewImage.removeAttribute('src')
-    ui.progressPreviewImage.classList.add('hidden')
-    ui.progressPreviewEmpty.classList.remove('hidden')
+    if (progressPreviewTimer) window.clearTimeout(progressPreviewTimer)
+    progressPreviewTimer = window.setTimeout(() => {
+      ui.progressPreview?.classList.add('hidden')
+    }, 7000)
   }
 
   function getTotalExhibitsCount() {
