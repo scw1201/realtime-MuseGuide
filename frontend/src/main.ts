@@ -64,10 +64,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const ui = getUI()
   const controller = createController(ui)
+  const navbar = document.querySelector<HTMLElement>('.navbar')
   const updateNavChrome = () => {
     const onLandingContent = document.body.classList.contains('mode-landing')
       && window.scrollY > 120
     document.body.classList.toggle('nav-over-content', onLandingContent)
+    navbar?.classList.toggle('nav-over-content', onLandingContent)
   }
 
   const pages: Record<string, HTMLElement | null> = {
@@ -247,6 +249,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.toggle('mode-landing', page === 'landing')
     if (page !== 'landing') {
       document.body.classList.remove('nav-over-content')
+      navbar?.classList.remove('nav-over-content')
     }
     if (page === 'home') {
       document.body.classList.add('mode-home')

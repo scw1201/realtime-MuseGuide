@@ -187,11 +187,24 @@ body.nav-over-content .navbar {
   mix-blend-mode: normal;
 }
 
-body.nav-over-content .navbar::before {
+.navbar.nav-over-content {
+  color: #080806;
+  background: rgba(242, 242, 239, 0.78) !important;
+  backdrop-filter: blur(24px) saturate(1.16) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.16) !important;
+  mix-blend-mode: normal;
+  box-shadow:
+    0 1px 0 rgba(118, 118, 112, 0.3),
+    0 16px 42px rgba(12, 12, 10, 0.1) !important;
+}
+
+body.nav-over-content .navbar::before,
+.navbar.nav-over-content::before {
   opacity: 1;
 }
 
-body.nav-over-content .nav-logo {
+body.nav-over-content .nav-logo,
+.navbar.nav-over-content .nav-logo {
   filter: invert(1);
 }
 
