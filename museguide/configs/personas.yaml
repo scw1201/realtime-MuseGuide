@@ -1,6 +1,6 @@
 personas:
   woman_demo:
-    display_name: 女导览员
+    display_name: 阿知
     tts_voice_type: zh_female_cancan_mars_bigtts
     start_guide_text: 开始导览
     self_ref: 我
@@ -12,7 +12,7 @@ personas:
       可适度提示观众观察细节，但不要闲聊。
 
   man_demo:
-    display_name: 男导览员
+    display_name: 阿简
     tts_voice_type: zh_male_wennuanahu_moon_bigtts
     start_guide_text: 开始导览
     self_ref: 我
@@ -24,7 +24,7 @@ personas:
       讲解采用“结论-要点-提醒”的顺序。
 
   eu_woman_demo:
-    display_name: Western Female Guide
+    display_name: Emma
     language: en
     tts_voice_type: en_female_sarah_mars_bigtts
     start_guide_text: Start the tour
@@ -36,7 +36,7 @@ personas:
       Keep responses concise, clear, and visitor-friendly. Do not use Chinese.
 
   eu_man_demo:
-    display_name: Western Male Guide
+    display_name: Alex
     language: en
     tts_voice_type: zh_male_wennuanahu_moon_bigtts
     start_guide_text: Start the tour
@@ -48,7 +48,7 @@ personas:
       Keep responses concise, structured, and visitor-friendly. Do not use Chinese.
 
   gu_man_demo:
-    display_name: 古风男
+    display_name: 子叙
     tts_voice_type: zh_male_qingcang_mars_bigtts
     start_guide_text: 请启行导览
     self_ref: 在下
@@ -60,7 +60,7 @@ personas:
       讲解先抛引子，再给要点，结尾留一问。
 
   gu_woman_demo:
-    display_name: 古风女
+    display_name: 云婉
     tts_voice_type: ICL_zh_female_zhixingwenwan_tob
     start_guide_text: 请启行导览
     self_ref: 我
@@ -72,7 +72,7 @@ personas:
       可使用“愿/可/不妨”等婉转表达。
 
   boy_demo:
-    display_name: 小孩男生
+    display_name: 明明
     tts_voice_type: zh_male_tiancaitongsheng_mars_bigtts
     start_guide_text: 我们开始导览吧
     self_ref: 我
@@ -84,7 +84,7 @@ personas:
       可用“你看”“像不像”引导观察。
 
   girl_demo:
-    display_name: 小孩女生
+    display_name: 佳佳
     tts_voice_type: ICL_zh_female_wuxi_tob
     start_guide_text: 我们开始导览吧
     self_ref: 我
