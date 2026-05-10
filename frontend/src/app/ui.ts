@@ -14,8 +14,7 @@ export function renderApp(root: HTMLElement) {
         <nav class="nav-links">
           <a href="#" class="nav-link active" data-page="landing">首页</a>
           <a href="#" class="nav-link" data-page="home">免费体验</a>
-          <a href="#" class="nav-link" data-page="route">展陈路线</a>
-          <a href="#" class="nav-link" data-page="collections">数字典藏</a>
+          <a href="#" class="nav-link" data-page="collections">展品预览</a>
           <a href="#" class="nav-link" data-page="analytics">数据看板</a>
           <a href="#" class="nav-link" data-page="admin">内容后台</a>
         </nav>
@@ -192,40 +191,21 @@ export function renderApp(root: HTMLElement) {
       </div>
     </main>
 
-    <section class="route-page page hidden" id="routePage">
-      <div class="collections-hero">
-        <div class="collections-hero-title">展陈路线</div>
-        <div class="collections-hero-sub">按空间顺序浏览展区与关键展品</div>
-      </div>
-      <div class="route-layout">
+    <section class="collections-page page hidden" id="collectionsPage">
+      <div class="route-layout exhibit-preview-route">
         <aside class="route-floor">
           <img src="/imgs/floor/floors_all.png" alt="展馆楼层总览" />
         </aside>
         <div class="route-root" id="routeRoot"></div>
       </div>
-    </section>
-
-    <section class="collections-page page hidden" id="collectionsPage">
-      <div class="collections-hero">
-        <div class="collections-hero-title">数字典藏</div>
-        <div class="collections-hero-sub">MuseGuide 导览 · 展区与展品总览</div>
-      </div>
       <div class="collections-root" id="collectionsRoot"></div>
     </section>
 
     <section class="admin-page page hidden" id="adminPage">
-      <div class="collections-hero">
-        <div class="collections-hero-title">内容后台</div>
-        <div class="collections-hero-sub">面向馆方的轻量配置台：展区、展品、人物文案可直接编辑</div>
-      </div>
       <div class="admin-root" id="adminRoot"></div>
     </section>
 
     <section class="analytics-page page hidden" id="analyticsPage">
-      <div class="collections-hero">
-        <div class="collections-hero-title">数据看板</div>
-        <div class="collections-hero-sub">从会话日志回看导览效果、用户兴趣与自动推进表现</div>
-      </div>
       <div class="analytics-root" id="analyticsRoot"></div>
     </section>
 
@@ -274,7 +254,7 @@ export function getUI() {
     contextPathHint: document.getElementById('contextPathHint') as HTMLSpanElement,
     navLinks: document.querySelectorAll('.nav-link') as NodeListOf<HTMLAnchorElement>,
     homePage: document.getElementById('homePage') as HTMLElement,
-    routePage: document.getElementById('routePage') as HTMLElement,
+    routePage: document.getElementById('routePage') as HTMLElement | null,
     routeRoot: document.getElementById('routeRoot') as HTMLDivElement,
     collectionsPage: document.getElementById('collectionsPage') as HTMLElement,
     collectionsRoot: document.getElementById('collectionsRoot') as HTMLDivElement,

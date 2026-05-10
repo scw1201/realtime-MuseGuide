@@ -64,11 +64,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const ui = getUI()
   const controller = createController(ui)
+  const updateNavChrome = () => {
+    const heroHeight = ui.landingPage?.querySelector<HTMLElement>('.landing-video-shell')?.offsetHeight || 0
+    const onLandingContent = document.body.classList.contains('mode-landing')
+      && window.scrollY > Math.max(80, heroHeight - 96)
+    document.body.classList.toggle('nav-over-content', onLandingContent)
+  }
 
   const pages: Record<string, HTMLElement | null> = {
     landing: ui.landingPage,
     home: ui.homePage,
-    route: ui.routePage,
     collections: ui.collectionsPage,
     analytics: ui.analyticsPage,
     admin: ui.adminPage,
@@ -217,8 +222,9 @@ window.addEventListener('DOMContentLoaded', () => {
           await controller.reloadContentConfig()
           if (!ui.collectionsPage.classList.contains('hidden')) {
             await loadCollections()
+            await loadRoute()
           }
-          if (!ui.routePage.classList.contains('hidden')) {
+          if (ui.routePage && !ui.routePage.classList.contains('hidden')) {
             await loadRoute()
           }
           if (!ui.analyticsPage.classList.contains('hidden')) {
@@ -240,6 +246,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const showPage = async (page: string) => {
     document.body.classList.toggle('mode-landing', page === 'landing')
+    if (page !== 'landing') {
+      document.body.classList.remove('nav-over-content')
+    }
     if (page === 'home') {
       document.body.classList.add('mode-home')
     } else {
@@ -272,8 +281,6 @@ window.addEventListener('DOMContentLoaded', () => {
     })
     if (page === 'collections') {
       await loadCollections()
-    }
-    if (page === 'route') {
       await loadRoute()
     }
     if (page === 'admin') {
@@ -286,9 +293,12 @@ window.addEventListener('DOMContentLoaded', () => {
       liveDemoPrepared = true
       controller.preconnectLiveAvatar()
     }
+    updateNavChrome()
   }
 
   showPage('landing')
+  window.addEventListener('scroll', updateNavChrome, { passive: true })
+  window.addEventListener('resize', updateNavChrome)
 
   ui.navLinks?.forEach(link => {
     link.onclick = async (e) => {
