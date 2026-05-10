@@ -1485,6 +1485,17 @@ body.mode-landing .landing-page.page.active {
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(16px);
   animation: progressPreviewFloat 0.28s ease-out;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.42s ease,
+    transform 0.42s ease;
+}
+
+.progress-preview.is-hiding {
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
 }
 
 .progress-preview-label {
@@ -1694,11 +1705,11 @@ body.mode-landing .landing-page.page.active {
 
 .context-map-img {
   width: 100%;
-  height: auto;
-  object-fit: contain;
-  border-radius: 0;
-  border: none;
-  box-shadow: none;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid rgba(214, 179, 120, 0.18);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
   opacity: 0.92;
 }
 

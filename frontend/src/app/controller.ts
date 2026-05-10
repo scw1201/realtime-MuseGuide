@@ -247,8 +247,15 @@ export function createController(ui: UI) {
     return ''
   }
 
-  function updateContextMap(floorLabel: string) {
+  function updateContextMap(zoneName: string, floorLabel = '') {
     if (!ui.contextMap) return
+    const zoneId = zoneBgMap.get(zoneName || '') || zoneNameToId.get(zoneName || '')
+    if (zoneId) {
+      ui.contextMap.src = `/bgs/${zoneId}.png`
+      ui.contextMap.style.display = 'block'
+      return
+    }
+
     const key = floorKeyFromLabel(floorLabel)
     if (!key) {
       ui.contextMap.style.display = 'none'
@@ -448,8 +455,12 @@ export function createController(ui: UI) {
 
     if (progressPreviewTimer) window.clearTimeout(progressPreviewTimer)
     progressPreviewTimer = window.setTimeout(() => {
-      ui.progressPreview?.classList.add('hidden')
-    }, 7000)
+      ui.progressPreview?.classList.add('is-hiding')
+      progressPreviewTimer = window.setTimeout(() => {
+        ui.progressPreview?.classList.add('hidden')
+        ui.progressPreview?.classList.remove('is-hiding')
+      }, 420)
+    }, 10000)
   }
 
   function getTotalExhibitsCount() {
@@ -553,7 +564,7 @@ export function createController(ui: UI) {
       if (ui.contextZone) {
         ui.contextZone.textContent = formatZoneDisplay('展馆前台').replace(/^MuseGuide · /, '')
       }
-      updateContextMap('展馆一层')
+      updateContextMap('展馆前台', '展馆一层')
       updateStageBg('展馆前台')
       if (ui.contextStage) ui.contextStage.textContent = '准备阶段'
       if (ui.contextAnchor) ui.contextAnchor.textContent = '—'
@@ -689,7 +700,7 @@ export function createController(ui: UI) {
         ui.contextZone.textContent = newText
         flashContextField(ui.contextZone)
       }
-      updateContextMap(floor)
+      updateContextMap(zoneName, floor)
       updateStageBg(zoneName)
     }
 
