@@ -67,7 +67,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const updateNavChrome = () => {
     const heroHeight = ui.landingPage?.querySelector<HTMLElement>('.landing-video-shell')?.offsetHeight || 0
     const onLandingContent = document.body.classList.contains('mode-landing')
-      && window.scrollY > Math.max(80, heroHeight - 96)
+      && window.scrollY > Math.max(96, heroHeight - 180)
     document.body.classList.toggle('nav-over-content', onLandingContent)
   }
 
@@ -297,6 +297,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   showPage('landing')
+  window.setTimeout(updateNavChrome, 0)
   window.addEventListener('scroll', updateNavChrome, { passive: true })
   window.addEventListener('resize', updateNavChrome)
 

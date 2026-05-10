@@ -161,7 +161,7 @@ body.mode-home::after {
   content: "";
   position: absolute;
   inset: 0 24px;
-  z-index: -1;
+  z-index: 0;
   opacity: 0;
   background: rgba(255, 255, 255, 0.58);
   backdrop-filter: blur(16px);
@@ -193,6 +193,8 @@ body.nav-over-content .nav-logo {
 }
 
 .nav-inner {
+  position: relative;
+  z-index: 2;
   height: 100%;
   max-width: none;
   margin: 0;
