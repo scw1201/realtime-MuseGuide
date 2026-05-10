@@ -1325,6 +1325,10 @@ body.mode-landing .landing-page.page.active {
   display: none;
 }
 
+.persona-sidebar.collapsed .sidebar-tabs {
+  display: none;
+}
+
 .persona-header {
   display: flex;
   align-items: center;
@@ -1464,10 +1468,12 @@ body.mode-landing .landing-page.page.active {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: visible;
   flex: 1;
   min-height: 0;
-  padding-right: 4px;
+  padding: 2px 4px 2px 18px;
+  margin-left: -10px;
 }
 
 .progress-preview {
@@ -1534,7 +1540,7 @@ body.mode-landing .landing-page.page.active {
 
 .progress-timeline {
   position: relative;
-  margin: 2px 0 0 10px;
+  margin: 2px 0 0 16px;
   padding: 0 0 2px 18px;
   list-style: none;
   border-left: 1px solid rgba(214, 179, 120, 0.22);
