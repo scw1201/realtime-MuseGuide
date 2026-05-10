@@ -79,26 +79,81 @@ export function renderApp(root: HTMLElement) {
         </p>
       </section>
 
-      <section class="landing-product">
-        <div class="landing-section-label">Product Features</div>
-        <h2 class="landing-section-title">产品特性</h2>
+      <section class="landing-product" data-horizontal-showcase>
+        <div class="landing-product-head">
+          <div class="landing-section-label">Product Features</div>
+          <h2 class="landing-section-title">产品亮点</h2>
+          <p class="landing-section-subtitle">向下滚动，横向浏览 MuseGuide 的三组核心能力。</p>
+        </div>
 
-        <div class="landing-feature-stack">
-          <article class="landing-feature-card">
-            <span class="capability-index">01</span>
-            <h3>实时数字人讲解</h3>
-            <p>接入实时口型链路，让 LLM 返回的话直接变成可听、可看的导览员表达。</p>
-          </article>
-          <article class="landing-feature-card landing-feature-dark">
-            <span class="capability-index">02</span>
-            <h3>多状态视频调度</h3>
-            <p>问候、聚焦、细致讲解、待机等状态由导览语义驱动，减少“只会播一个视频”的机械感。</p>
-          </article>
-          <article class="landing-feature-card">
-            <span class="capability-index">03</span>
-            <h3>可维护内容中台</h3>
-            <p>展区、展品、人物文案与数据看板保持在同一套系统里，方便馆方持续运营。</p>
-          </article>
+        <div class="landing-horizontal-viewport">
+          <div class="landing-feature-stack" data-horizontal-track>
+            <article class="landing-feature-card landing-feature-states" data-parallax-card>
+              <span class="capability-index">01</span>
+              <div class="landing-feature-copy">
+                <h3>多导览状态 + 实时口型对齐</h3>
+                <p>把待机、倾听、指向、细讲等状态与实时口型链路统一调度，让数字导览员在答辩演示里呈现“正在现场工作”的连续感。</p>
+              </div>
+              <div class="landing-state-carousel" id="landingStateCarousel">
+                <div class="landing-state-card active" data-landing-state-card>
+                  <span>Idle</span>
+                  <strong>自然待机</strong>
+                </div>
+                <div class="landing-state-card" data-landing-state-card>
+                  <span>Listening</span>
+                  <strong>倾听观众</strong>
+                </div>
+                <div class="landing-state-card" data-landing-state-card>
+                  <span>Lip Sync</span>
+                  <strong>实时口型</strong>
+                </div>
+                <div class="landing-state-card" data-landing-state-card>
+                  <span>Pointing</span>
+                  <strong>空间指向</strong>
+                </div>
+              </div>
+            </article>
+
+            <article class="landing-feature-card landing-feature-dark landing-feature-video" data-parallax-card>
+              <span class="capability-index">02</span>
+              <div class="landing-feature-copy">
+                <h3>智能理解导览信息</h3>
+                <p>馆方知识库、展品知识和空间位置认知共同进入导览决策，让回答不只像聊天，也贴合展陈现场。</p>
+              </div>
+              <div class="landing-video-slots slots-three">
+                <div class="landing-video-slot">
+                  <video playsinline muted preload="metadata" data-parallax-media></video>
+                  <span>馆方可管理导览员知识库</span>
+                </div>
+                <div class="landing-video-slot">
+                  <video playsinline muted preload="metadata" data-parallax-media></video>
+                  <span>数字导览员理解展品知识</span>
+                </div>
+                <div class="landing-video-slot">
+                  <video playsinline muted preload="metadata" data-parallax-media></video>
+                  <span>导览员理解空间位置认知</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="landing-feature-card landing-feature-video" data-parallax-card>
+              <span class="capability-index">03</span>
+              <div class="landing-feature-copy">
+                <h3>主动推进导览进程</h3>
+                <p>系统持续维护当前展区、展品和阶段，并把详略、引入、承接等导览技巧融入下一步组织。</p>
+              </div>
+              <div class="landing-video-slots slots-two">
+                <div class="landing-video-slot">
+                  <video playsinline muted preload="metadata" data-parallax-media></video>
+                  <span>动态更新导览进程，导览员心中有数</span>
+                </div>
+                <div class="landing-video-slot">
+                  <video playsinline muted preload="metadata" data-parallax-media></video>
+                  <span>融入导览技巧：详略、引入、承接</span>
+                </div>
+              </div>
+            </article>
+          </div>
         </div>
       </section>
     </section>
@@ -106,6 +161,10 @@ export function renderApp(root: HTMLElement) {
     <!-- 主舞台区域 -->
     <main class="stage-wrap page hidden" id="homePage">
       <div class="stage-card" id="stageCard">
+        <button class="home-exit" type="button" data-jump-page="landing">
+          返回首页
+        </button>
+
         <!-- 侧边人物栏 -->
         <aside class="persona-sidebar" id="personaSidebar">
           <div class="persona-header">
@@ -171,17 +230,10 @@ export function renderApp(root: HTMLElement) {
         </section>
 
         <div class="avatar-frame" id="avatarFrame">
-          <div class="liveavatar-panel" id="liveAvatarPanel">
-            <button class="liveavatar-toggle" id="liveAvatarToggle" type="button">
-              接入实时数字人
-            </button>
-            <span class="liveavatar-status" id="liveAvatarStatus">未连接</span>
-            <button class="liveavatar-interrupt" id="liveAvatarInterrupt" type="button">
-              打断
-            </button>
-            <button class="liveavatar-log-toggle" id="liveAvatarLogToggle" type="button">
-              log
-            </button>
+          <div class="liveavatar-hidden-controls" aria-hidden="true">
+            <button id="liveAvatarToggle" type="button">接入实时数字人</button>
+            <span id="liveAvatarStatus">未连接</span>
+            <button id="liveAvatarLogToggle" type="button">log</button>
           </div>
           <div class="liveavatar-log hidden" id="liveAvatarLog"></div>
           <video

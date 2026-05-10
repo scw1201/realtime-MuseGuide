@@ -31,6 +31,77 @@ window.addEventListener('DOMContentLoaded', () => {
   if (!app) return
 
   renderApp(app)
+
+  const initLandingStateCarousel = () => {
+    const cards = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-landing-state-card]')
+    )
+    if (!cards.length) return
+
+    let activeIndex = 0
+    const layoutCards = () => {
+      cards.forEach((card, index) => {
+        const offset = (index - activeIndex + cards.length) % cards.length
+        card.classList.toggle('active', offset === 0)
+        gsap.to(card, {
+          x: offset * 22,
+          y: offset * 14,
+          scale: 1 - offset * 0.06,
+          opacity: offset > 2 ? 0 : 1 - offset * 0.2,
+          rotate: offset === 0 ? 0 : offset * -2.5,
+          zIndex: cards.length - offset,
+          duration: 0.78,
+          ease: 'power3.out',
+        })
+      })
+    }
+
+    layoutCards()
+    window.setInterval(() => {
+      activeIndex = (activeIndex + 1) % cards.length
+      layoutCards()
+    }, 2300)
+
+    document.getElementById('landingStateCarousel')?.addEventListener('mouseenter', () => {
+      gsap.to(cards[activeIndex], {
+        scale: 1.04,
+        duration: 0.28,
+        ease: 'power2.out',
+      })
+    })
+    document.getElementById('landingStateCarousel')?.addEventListener('mouseleave', layoutCards)
+  }
+
+  initLandingStateCarousel()
+
+  const initLandingHorizontalShowcase = () => {
+    const viewport = document.querySelector<HTMLElement>('.landing-horizontal-viewport')
+    const track = document.querySelector<HTMLElement>('[data-horizontal-track]')
+    if (!viewport || !track || window.matchMedia('(max-width: 1100px)').matches) return
+
+    const maxScrollLeft = () => Math.max(0, track.scrollWidth - viewport.clientWidth)
+
+    viewport.addEventListener('wheel', (event) => {
+      const max = maxScrollLeft()
+      if (!max) return
+
+      const goingRight = event.deltaY > 0
+      const goingLeft = event.deltaY < 0
+      const atStart = viewport.scrollLeft <= 1
+      const atEnd = viewport.scrollLeft >= max - 1
+
+      if ((goingRight && !atEnd) || (goingLeft && !atStart)) {
+        event.preventDefault()
+        viewport.scrollLeft = Math.min(
+          max,
+          Math.max(0, viewport.scrollLeft + event.deltaY * 4.2)
+        )
+      }
+    })
+  }
+
+  initLandingHorizontalShowcase()
+
   document.body.insertAdjacentHTML(
     'beforeend',
     `
@@ -54,6 +125,10 @@ window.addEventListener('DOMContentLoaded', () => {
             <span class="voice-wave">
               <i></i><i></i><i></i><i></i>
             </span>
+          </button>
+
+          <button id="liveAvatarInterrupt" class="chat-interrupt" type="button" disabled>
+            打断
           </button>
 
           <button id="send" class="chat-send">发送</button>
