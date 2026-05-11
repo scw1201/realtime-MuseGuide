@@ -94,23 +94,31 @@ export function renderApp(root: HTMLElement) {
                 <h3>多导览状态 + 实时口型对齐</h3>
                 <p>把待机、倾听、指向、细讲等状态与实时口型链路统一调度，让数字导览员在答辩演示里呈现“正在现场工作”的连续感。</p>
               </div>
-              <div class="landing-state-carousel" id="landingStateCarousel">
-                <div class="landing-state-card active" data-landing-state-card>
-                  <span>Idle</span>
-                  <strong>自然待机</strong>
-                </div>
-                <div class="landing-state-card" data-landing-state-card>
-                  <span>Listening</span>
-                  <strong>倾听观众</strong>
-                </div>
-                <div class="landing-state-card" data-landing-state-card>
-                  <span>Lip Sync</span>
-                  <strong>实时口型</strong>
-                </div>
-                <div class="landing-state-card" data-landing-state-card>
-                  <span>Pointing</span>
-                  <strong>空间指向</strong>
-                </div>
+              <div class="landing-state-carousel landing-state-gallery" id="landingStateCarousel">
+                <figure class="landing-state-card landing-state-image-card active" data-landing-state-card>
+                  <img src="/landing/多状态.png" alt="多状态导览展示" />
+                  <figcaption class="landing-state-caption">
+                    <span>STATE ORCHESTRATION</span>
+                    <strong>多状态导览调度</strong>
+                    <p>待机、倾听、讲解与指向状态被统一编排，导览员的表现更连续、更像真实现场服务。</p>
+                  </figcaption>
+                </figure>
+                <figure class="landing-state-card landing-state-image-card" data-landing-state-card>
+                  <img src="/landing/实时嘴型.png" alt="实时嘴型展示" />
+                  <figcaption class="landing-state-caption">
+                    <span>REAL-TIME LIPSYNC</span>
+                    <strong>实时口型对齐</strong>
+                    <p>TTS 音频与人物状态视频同轨驱动，让每一次回答都有更稳定的嘴型反馈与表达张力。</p>
+                  </figcaption>
+                </figure>
+                <figure class="landing-state-card landing-state-image-card" data-landing-state-card>
+                  <img src="/landing/注意力引导.png" alt="注意力引导展示" />
+                  <figcaption class="landing-state-caption">
+                    <span>ATTENTION GUIDANCE</span>
+                    <strong>注意力引导</strong>
+                    <p>通过视线、姿态与指向动作，把观众的注意力自然带到当前展区与目标展品上。</p>
+                  </figcaption>
+                </figure>
               </div>
             </article>
 

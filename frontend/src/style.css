@@ -648,7 +648,7 @@ body.mode-landing .nav-link:hover {
   background: #ffffff;
   color: #080806;
   height: 100vh;
-  min-height: 860px;
+  min-height: 980px;
   overflow: hidden;
   padding: 0;
   display: grid;
@@ -656,7 +656,7 @@ body.mode-landing .nav-link:hover {
 }
 
 .landing-product-head {
-  padding: calc(var(--nav-height) + 20px) max(24px, 6vw) 10px;
+  padding: calc(var(--nav-height) + 24px) max(24px, 6vw) 28px;
 }
 
 .landing-section-label {
@@ -719,9 +719,9 @@ body.mode-landing .nav-link:hover {
   min-height: 100%;
   display: grid;
   grid-template-columns: 76px minmax(0, 0.92fr) minmax(360px, 1.08fr);
-  align-items: end;
+  align-items: center;
   gap: clamp(22px, 3vw, 44px);
-  padding: clamp(34px, 5.5vw, 78px) max(24px, 6vw) clamp(72px, 7vw, 96px);
+  padding: clamp(54px, 7vw, 96px) max(24px, 6vw) clamp(96px, 8vw, 132px);
   border-radius: 0;
   border: 0;
   background:
@@ -757,7 +757,7 @@ body.mode-landing .nav-link:hover {
 }
 
 .landing-feature-copy {
-  align-self: end;
+  align-self: center;
 }
 
 .landing-feature-card h3 {
@@ -785,7 +785,7 @@ body.mode-landing .nav-link:hover {
 .landing-state-carousel {
   position: relative;
   width: min(390px, 100%);
-  height: 250px;
+  height: 340px;
   justify-self: end;
   align-self: center;
   perspective: 900px;
@@ -814,7 +814,62 @@ body.mode-landing .nav-link:hover {
   text-transform: uppercase;
 }
 
-.landing-state-card strong {
+.landing-state-gallery {
+  width: min(620px, 100%);
+  height: 420px;
+}
+
+.landing-state-image-card {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 32px;
+  background: rgba(255, 252, 246, 0.98);
+  box-shadow: 0 28px 64px rgba(17, 32, 33, 0.16);
+}
+
+.landing-state-image-card img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+.landing-state-caption {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 88px 32px 30px;
+  background: linear-gradient(180deg, rgba(7, 10, 12, 0) 0%, rgba(7, 10, 12, 0.18) 24%, rgba(7, 10, 12, 0.74) 68%, rgba(7, 10, 12, 0.92) 100%);
+}
+
+.landing-state-caption span {
+  color: rgba(255, 244, 221, 0.82);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.landing-state-caption strong {
+  color: #fffaf1;
+  font-size: clamp(28px, 3vw, 42px);
+  line-height: 1.04;
+  font-weight: 900;
+}
+
+.landing-state-caption p {
+  max-width: none;
+  margin: 0;
+  color: rgba(255, 247, 235, 0.8);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.landing-state-card > strong {
   color: #080806;
   font-size: clamp(28px, 3vw, 42px);
   line-height: 1.08;
@@ -2663,7 +2718,8 @@ body:not(.mode-home) .chatbar {
 
   .landing-state-carousel {
     justify-self: start;
-    width: min(420px, 100%);
+    width: min(520px, 100%);
+    height: 360px;
   }
 
   .landing-video-slots.slots-three,
@@ -3619,80 +3675,6 @@ body:not(.mode-home) .chatbar {
   margin-top: 8px;
 }
 
-.admin-login-shell {
-  min-height: 58vh;
-  display: grid;
-  place-items: center;
-  padding: 42px 18px;
-}
-
-.admin-login-card {
-  width: min(520px, 100%);
-  border: 1px solid rgba(212, 164, 91, 0.28);
-  border-radius: 32px;
-  padding: 34px;
-  color: #f8ecd1;
-  background:
-    radial-gradient(circle at top left, rgba(212, 164, 91, 0.18), transparent 38%),
-    linear-gradient(180deg, rgba(28, 22, 17, 0.98), rgba(12, 10, 8, 0.94));
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.34);
-}
-
-.admin-login-kicker {
-  color: rgba(241, 208, 140, 0.84);
-  font-size: 12px;
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-}
-
-.admin-login-card h2 {
-  margin: 10px 0 0;
-  font-size: clamp(28px, 4vw, 42px);
-  font-family: var(--font-display);
-}
-
-.admin-login-card p {
-  margin: 12px 0 24px;
-  color: rgba(248, 236, 210, 0.7);
-  line-height: 1.7;
-}
-
-.admin-login-form {
-  display: grid;
-  gap: 14px;
-}
-
-.admin-login-input {
-  width: 100%;
-  border: 1px solid rgba(212, 164, 91, 0.24);
-  border-radius: 18px;
-  padding: 15px 16px;
-  color: #fff7e8;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.admin-login-input:focus {
-  outline: none;
-  border-color: rgba(241, 208, 140, 0.72);
-  box-shadow: 0 0 0 4px rgba(212, 164, 91, 0.14);
-}
-
-.admin-login-btn {
-  border: 0;
-  border-radius: 18px;
-  padding: 15px 18px;
-  color: #23170f;
-  font-weight: 700;
-  cursor: pointer;
-  background: linear-gradient(135deg, #f0cf8b, #d6a757);
-  box-shadow: 0 16px 34px rgba(212, 164, 91, 0.24);
-}
-
-.admin-login-error {
-  min-height: 22px;
-  margin-top: 14px;
-  color: #ffcfb8;
-}
 
 @media (max-width: 1200px) {
   .analytics-overview {

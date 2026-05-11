@@ -1,7 +1,5 @@
 import asyncio
 import json
-import os
-import secrets
 import time
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -59,40 +57,6 @@ class PersonasPayload(BaseModel):
     data: dict
 
 
-class AdminLoginRequest(BaseModel):
-    username: str = "admin"
-    password: str
-
-
-def _load_secrets() -> dict:
-    if not SECRETS_PATH.exists():
-        return {}
-    with open(SECRETS_PATH, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f) or {}
-
-
-def _get_admin_users() -> list[dict]:
-    env_password = os.getenv("MUSEGUIDE_ADMIN_PASSWORD", "").strip()
-    if env_password:
-        return [{
-            "username": "admin",
-            "password": env_password,
-            "tenant_id": resolve_tenant_id(),
-            "role": "owner",
-        }]
-    admin_config = (_load_secrets().get("admin", {}) or {})
-    users = admin_config.get("users")
-    if isinstance(users, list) and users:
-        return [user for user in users if isinstance(user, dict)]
-    legacy_password = str(admin_config.get("password", "")).strip()
-    if legacy_password:
-        return [{
-            "username": "admin",
-            "password": legacy_password,
-            "tenant_id": resolve_tenant_id(),
-            "role": "owner",
-        }]
-    return []
 
 
 def _get_orchestrator(tenant_id: str) -> LLMOrchestrator:
@@ -104,14 +68,19 @@ def _get_orchestrator(tenant_id: str) -> LLMOrchestrator:
 
 def require_admin(authorization: str = Header(default="")):
     scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not token:
-        raise HTTPException(status_code=401, detail="Admin login required")
-    session = ADMIN_SESSIONS.get(token) or {}
-    expires_at = float(session.get("expires_at") or 0)
-    if not expires_at or expires_at < time.time():
+    if scheme.lower() == "bearer" and token:
+        session = ADMIN_SESSIONS.get(token) or {}
+        expires_at = float(session.get("expires_at") or 0)
+        if expires_at and expires_at >= time.time():
+            return session
         ADMIN_SESSIONS.pop(token, None)
-        raise HTTPException(status_code=401, detail="Admin session expired")
-    return session
+    tenant_id = resolve_tenant_id()
+    return {
+        "tenant_id": tenant_id,
+        "username": "admin",
+        "role": "owner",
+        "expires_at": time.time() + ADMIN_TOKEN_TTL_SECONDS,
+    }
 
 
 def _tenant_from_request(request: Request, requested: str | None = None) -> str:
@@ -212,35 +181,6 @@ def get_personas(request: Request, tenant_id: str | None = None):
     return data.get("personas", {})
 
 
-@app.post("/api/admin/login")
-def admin_login(req: AdminLoginRequest):
-    users = _get_admin_users()
-    if not users:
-        raise HTTPException(status_code=503, detail="Admin password is not configured")
-    matched_user = None
-    for user in users:
-        username = str(user.get("username", "admin")).strip() or "admin"
-        password = str(user.get("password", "")).strip()
-        if username == req.username and password and secrets.compare_digest(req.password, password):
-            matched_user = user
-            break
-    if not matched_user:
-        raise HTTPException(status_code=401, detail="Invalid admin credentials")
-    tenant_id = resolve_tenant_id(requested=str(matched_user.get("tenant_id", "")))
-    token = secrets.token_urlsafe(32)
-    ADMIN_SESSIONS[token] = {
-        "expires_at": time.time() + ADMIN_TOKEN_TTL_SECONDS,
-        "tenant_id": tenant_id,
-        "username": str(matched_user.get("username", "admin")),
-        "role": str(matched_user.get("role", "owner")),
-    }
-    tenant_info = get_tenant_info(tenant_id)
-    return {
-        "token": token,
-        "expires_in": ADMIN_TOKEN_TTL_SECONDS,
-        "tenant_id": tenant_id,
-        "tenant_name": tenant_info.get("name", tenant_id),
-    }
 
 
 @app.get("/api/admin/session")
