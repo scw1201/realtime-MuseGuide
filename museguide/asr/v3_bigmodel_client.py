@@ -70,8 +70,10 @@ class BigModelASR:
         self.connected = False
 
     async def connect_once(self):
-        if self.connected and self.ws and not self.ws.closed:
-            return
+        if self.connected and self.ws is not None:
+            ws_state = getattr(self.ws, "state", None)
+            if ws_state is None or str(ws_state).upper() not in {"3", "CLOSED"}:
+                return
 
         print("🔌 [ASR] connecting once...")
 
@@ -84,7 +86,7 @@ class BigModelASR:
 
         self.ws = await websockets.connect(
             WS_URL,
-            extra_headers=headers,
+            additional_headers=headers,
             max_size=10 * 1024 * 1024,
         )
 

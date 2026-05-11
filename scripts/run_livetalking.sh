@@ -18,6 +18,14 @@ if [ -f ".env" ]; then
   set +a
 fi
 
+# Backward-compatible aliases for existing MuseGuide .env naming.
+if [ -z "${DOUBAO_APPID:-}" ] && [ -n "${TTS_APPID:-}" ]; then
+  export DOUBAO_APPID="${TTS_APPID}"
+fi
+if [ -z "${DOUBAO_TOKEN:-}" ] && [ -n "${TTS_ACCESS_TOKEN:-}" ]; then
+  export DOUBAO_TOKEN="${TTS_ACCESS_TOKEN}"
+fi
+
 eval "$("${PY_BIN}" - <<'PY'
 from pathlib import Path
 import shlex
