@@ -97,6 +97,8 @@ export function createController(ui: UI) {
   const personaMap = new Map<string, PersonaInfo>(
     PERSONAS.map(p => [p.id, p])
   )
+  const liveAvatarPersonaIds = new Set(['woman_demo', 'girl_demo'])
+  const isLiveAvatarPersona = (id: string) => liveAvatarPersonaIds.has(id)
   const startGuideTextMap = new Map<string, string>(
     PERSONAS.map(p => [p.id, p.startGuideText || '开始导览'])
   )
@@ -163,8 +165,8 @@ export function createController(ui: UI) {
         return
       }
 
-      if (currentPersonaId !== 'woman_demo') {
-        ui.liveAvatarStatus.textContent = '当前仅支持女导览员'
+      if (!isLiveAvatarPersona(currentPersonaId)) {
+        ui.liveAvatarStatus.textContent = '当前人物暂未接入实时口型'
         updateLiveAvatarToggle()
         return
       }
@@ -570,7 +572,7 @@ export function createController(ui: UI) {
 
     window.setTimeout(() => {
       currentPersonaId = id
-      if (liveAvatar.isConnected && id !== 'woman_demo') {
+      if (liveAvatar.isConnected && !isLiveAvatarPersona(id)) {
         void liveAvatar.stop()
         ui.avatarFrame?.classList.remove('liveavatar-active')
       }
@@ -788,7 +790,7 @@ export function createController(ui: UI) {
     }
 
     if (data.tts_text) {
-      if (liveAvatar.isConnected && currentPersonaId === 'woman_demo') {
+      if (liveAvatar.isConnected && isLiveAvatarPersona(currentPersonaId)) {
         try {
           const sent = await liveAvatar.speak(
             data.tts_text,
