@@ -104,6 +104,7 @@ export function createController(ui: UI) {
   )
 
   let currentPersonaId = 'woman_demo'
+  let currentLiveAvatarPersonaId = ''
   let hasConversationStarted = false
   const sessionId =
     globalThis.crypto?.randomUUID?.() ||
@@ -154,6 +155,7 @@ export function createController(ui: UI) {
     try {
       if (liveAvatar.isConnected) {
         await liveAvatar.stop()
+        currentLiveAvatarPersonaId = ''
         ui.avatarFrame?.classList.remove('liveavatar-active')
         const persona = personaMap.get(currentPersonaId)
         if (persona) {
@@ -174,11 +176,34 @@ export function createController(ui: UI) {
       ui.liveAvatarStatus.textContent = '连接中…'
       updateLiveAvatarToggle()
       await liveAvatar.start(currentPersonaId)
+      currentLiveAvatarPersonaId = currentPersonaId
       ui.liveAvatarStatus.textContent = '已连接'
       updateLiveAvatarToggle()
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       ui.liveAvatarStatus.textContent = `连接失败：${message.slice(0, 42)}`
+      updateLiveAvatarToggle()
+    }
+  }
+
+  async function switchLiveAvatarPersona(id: string) {
+    if (!liveAvatar.isConnected || currentLiveAvatarPersonaId === id) return
+    try {
+      if (ui.liveAvatarStatus) ui.liveAvatarStatus.textContent = '切换中…'
+      updateLiveAvatarToggle()
+      await liveAvatar.stop()
+      currentLiveAvatarPersonaId = ''
+      ui.avatarFrame?.classList.remove('liveavatar-active')
+      await liveAvatar.start(id)
+      currentLiveAvatarPersonaId = id
+      if (ui.liveAvatarStatus) ui.liveAvatarStatus.textContent = '已连接'
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      if (ui.liveAvatarStatus) ui.liveAvatarStatus.textContent = `切换失败：${message.slice(0, 34)}`
+      ui.avatarFrame?.classList.remove('liveavatar-active')
+      await liveAvatar.stop().catch(() => {})
+      currentLiveAvatarPersonaId = ''
+    } finally {
       updateLiveAvatarToggle()
     }
   }
@@ -573,8 +598,10 @@ export function createController(ui: UI) {
     window.setTimeout(() => {
       currentPersonaId = id
       if (liveAvatar.isConnected && !isLiveAvatarPersona(id)) {
-        void liveAvatar.stop()
+        void liveAvatar.stop().then(() => { currentLiveAvatarPersonaId = '' })
         ui.avatarFrame?.classList.remove('liveavatar-active')
+      } else if (liveAvatar.isConnected && currentLiveAvatarPersonaId !== id) {
+        void switchLiveAvatarPersona(id)
       }
       if (!liveAvatar.isConnected) {
         video.setPersona(persona.videoDir, persona.videoDir)
