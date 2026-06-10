@@ -124,8 +124,10 @@ Core modules:
 - Demo materials: `docs/demo/`
 - Thesis and software-copyright preparation notes: `docs/thesis/`
 - Planning notes: `docs/planning/`
+- Developer notes: `docs/dev/`
 - UI/readme screenshots: `docs/assets/`
 - Source persona/teaser media: `docs/assets/source-images/`
+- Reference/test audio: `examples/reference_audio/` and `examples/test_assets/`
 
 ## Safety Notes
 

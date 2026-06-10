@@ -152,7 +152,7 @@
 ### 可直接复用的项目素材
 
 - 项目介绍：`README.md`
-- 技术路径：`TECH-README.md`
+- 技术路径：`docs/dev/TECH-README.md`
 - 架构图素材：`docs/assets/opening/system-architecture-clean.png`
 - 界面素材：`docs/assets/opening/prototype-ui.png`
 - 功能图示：`docs/assets/readme/*`
