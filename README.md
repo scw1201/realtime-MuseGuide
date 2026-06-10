@@ -24,7 +24,6 @@ frontend/                 Vite + TypeScript web app
 museguide/                FastAPI backend, ASR/TTS clients, LLM orchestration
 scripts/                  Runtime and deployment helper scripts
 deploy/systemd/           portable systemd service templates
-deploy/718-linux/         historical service files for the 718 demo server
 docs/                     Integration notes, thesis/demo materials, screenshots
 examples/                 Small local test assets and SDK examples
 patches/                  LiveTalking integration patch
@@ -81,25 +80,9 @@ Then open:
 http://localhost:5173/
 ```
 
-## 718 Demo Server
+## Server Deployment
 
-The final demo server used:
-
-```text
-/media/lenovo/aigo/data/my_museguide
-```
-
-Deployment/service files live in:
-
-```text
-deploy/718-linux/
-```
-
-The helper scripts in `scripts/` start the backend services and LiveTalking avatar runtime. Local SSH tunnel setup for the demo machine was kept outside the repository in the operator's local notes.
-
-## Server Migration
-
-The project can be deployed to a new Linux server without relying on the 718 machine.
+The project can be deployed to a Linux server with SSH, Node.js build support, and a user-level systemd environment.
 
 ```bash
 REMOTE_HOST=user@new-server \
@@ -138,6 +121,7 @@ Core modules:
 - Thesis and software-copyright preparation notes: `docs/thesis/`
 - Planning notes: `docs/planning/`
 - Developer notes: `docs/dev/`
+- Deployment and migration notes: `docs/deployment/`
 - UI/readme screenshots: `docs/assets/`
 - Source persona/teaser media: `docs/assets/source-images/`
 - Reference/test audio: `examples/reference_audio/` and `examples/test_assets/`
