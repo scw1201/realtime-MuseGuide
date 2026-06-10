@@ -5,8 +5,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/media/lenovo/aigo/data/my_museguide
-EnvironmentFile=/media/lenovo/aigo/data/my_museguide/.env
-ExecStart=/media/lenovo/aigo/data/my_museguide/.conda/bin/conda run --no-capture-output -p /media/lenovo/aigo/data/my_museguide/.conda/envs/museguide python -m museguide.asr.ws_server
+ExecStart=/bin/zsh -lc 'set -a; source /media/lenovo/aigo/data/my_museguide/.env >/dev/null 2>&1 || true; set +a; exec /media/lenovo/aigo/data/my_museguide/.conda/bin/conda run --no-capture-output -p /media/lenovo/aigo/data/my_museguide/.conda/envs/museguide python -m museguide.asr.ws_server'
 Restart=always
 RestartSec=5
 

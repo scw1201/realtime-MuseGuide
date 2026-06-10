@@ -94,7 +94,7 @@
 ### 不建议作为主体代码交存的内容
 
 - `frontend/public/*` 下的大量图片、视频、音频素材
-- `images/*`
+- `docs/assets/source-images/*`
 - `docs/assets/*`
 - `package-lock.json`
 - 日志文件：`museguide/logs/*`
