@@ -1,0 +1,13 @@
+[Unit]
+Description=MuseGuide ASR WebSocket
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory={{REMOTE_DIR}}
+ExecStart=/bin/bash -lc 'set -a; source {{REMOTE_DIR}}/.env >/dev/null 2>&1 || true; set +a; exec {{REMOTE_DIR}}/.conda/bin/conda run --no-capture-output -p {{REMOTE_DIR}}/.conda/envs/museguide python -m museguide.asr.ws_server'
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

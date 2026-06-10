@@ -1,0 +1,13 @@
+[Unit]
+Description=MuseGuide TTS WebSocket
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory={{REMOTE_DIR}}
+ExecStart=/bin/bash -lc 'set -a; source {{REMOTE_DIR}}/.env >/dev/null 2>&1 || true; set +a; export TTS_WORKER_HOST=127.0.0.1; export TTS_WORKER_PORT={{TTS_PORT}}; exec {{REMOTE_DIR}}/.conda/bin/conda run --no-capture-output -p {{REMOTE_DIR}}/.conda/envs/museguide python -m museguide.tts.worker_v3'
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

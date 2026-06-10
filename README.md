@@ -23,7 +23,8 @@ MuseGuide combines a Vite/TypeScript frontend, a FastAPI orchestration backend, 
 frontend/                 Vite + TypeScript web app
 museguide/                FastAPI backend, ASR/TTS clients, LLM orchestration
 scripts/                  Runtime and deployment helper scripts
-deploy/718-linux/         systemd service templates for the 718 demo server
+deploy/systemd/           portable systemd service templates
+deploy/718-linux/         historical service files for the 718 demo server
 docs/                     Integration notes, thesis/demo materials, screenshots
 examples/                 Small local test assets and SDK examples
 patches/                  LiveTalking integration patch
@@ -95,6 +96,18 @@ deploy/718-linux/
 ```
 
 The helper scripts in `scripts/` start the backend services and LiveTalking avatar runtime. Local SSH tunnel setup for the demo machine was kept outside the repository in the operator's local notes.
+
+## Server Migration
+
+The project can be deployed to a new Linux server without relying on the 718 machine.
+
+```bash
+REMOTE_HOST=user@new-server \
+REMOTE_DIR=/home/user/museguide \
+./scripts/deploy_remote.sh
+```
+
+See `docs/deployment/MIGRATION.md` for the full migration checklist, including secrets, model files, LiveTalking assets, systemd services, and verification commands.
 
 ## Backend Pipeline
 
