@@ -4,7 +4,11 @@
 
 **项目状态：原学校演示服务器已回收，目前不提供在线体验或托管服务。** 原演示服务器使用 NVIDIA GeForce RTX 4090（由项目作者确认）；原环境完整软件版本和性能数据未保留，本文不宣称在新机器上已完成复现。
 
-<p align="center"><img src="frontend/public/imgs/sub_icon/all_guides.png" alt="MuseGuide guides" width="860"/></p>
+## 毕设演示视频
+
+[▶ 播放完整毕设演示视频（约 5 分钟）](https://github.com/scw1201/realtime-MuseGuide/blob/main/docs/demo/graduation-demo.mp4)
+
+历史演示录像，展示数字人导览原型的交互流程；原演示服务器已回收。
 
 ## 技术内容
 
