@@ -9,7 +9,7 @@ The first live-lipsync version supports `woman_demo` only. Other personas keep u
 
 ## Setup and version status
 
-The original school server has been retired. Its GPU was an RTX 4090, as confirmed by the author. The original LiveTalking commit was not preserved, so the patch and runtime have not been revalidated against the latest upstream release.
+The reference demo environment used an RTX 4090 GPU. The original LiveTalking commit was not preserved, so the patch and runtime have not been revalidated against the latest upstream release.
 
 Clone the runtime separately before installing its dependencies:
 
