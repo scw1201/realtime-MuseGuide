@@ -6,7 +6,7 @@
 
 ## 毕设演示视频
 
-[▶ 播放完整毕设演示视频（约 5 分钟）](https://github.com/scw1201/realtime-MuseGuide/blob/main/docs/demo/graduation-demo.mp4)
+https://github.com/user-attachments/assets/c688ed39-cae1-4be3-a34b-5fc44310f1b5
 
 历史演示录像，展示数字人导览原型的交互流程；原演示服务器已回收。
 
