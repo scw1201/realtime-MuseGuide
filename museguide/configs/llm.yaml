@@ -12,4 +12,4 @@ llm:
   response_format: json     # text / json / json_schema（下一步可升级）
 
   # 调试
-  debug: true
+  debug: false

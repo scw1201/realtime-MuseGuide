@@ -7,20 +7,23 @@ MuseGuide keeps two playback paths:
 
 The first live-lipsync version supports `woman_demo` only. Other personas keep using non-live playback.
 
-## Setup
+## Setup and version status
 
-Use conda for the LiveTalking environment:
+The original school server has been retired. Its GPU was an RTX 4090, as confirmed by the author. The original LiveTalking commit was not preserved, so the patch and runtime have not been revalidated against the latest upstream release.
 
-```bash
-conda env create -f environment.livetalking.yml
-conda activate museguide-livetalking
-```
-
-If dependency downloads are slow, enable the user's proxy helper first:
+Clone the runtime separately before installing its dependencies:
 
 ```bash
-proxy_on
+git clone https://github.com/lipku/LiveTalking.git livetalking
+# Select a compatible upstream revision, then record it for your deployment:
+git -C livetalking rev-parse HEAD
 ```
+
+Follow the selected revision's installation instructions. The current upstream README lists Ubuntu 22.04, Python 3.12, PyTorch 2.9.1 and CUDA 12.8; the local `environment.livetalking.yml` describes an older Python 3.10 / CUDA 12.1 configuration and is retained only as a historical reference. Do not mix the two dependency sets. See [upstream](https://github.com/lipku/LiveTalking).
+
+Before running, check that the integration patch applies with `git -C livetalking apply --check ../patches/livetalking_museguide.patch`, then use the patch script below. A failure means that revision needs adaptation; do not force the patch.
+
+Obtain the selected upstream's model files under their own license. The preparation script expects `wav2lip/wav2lip256.pth` and `wav2lip/s3fd.pth`, and links them into the runtime. Neither weights nor the historical avatar runtime are included in this repository. By default it reads the existing state videos from `frontend/public/videos/woman_demo`.
 
 Prepare Wav2Lip assets from the existing woman state videos:
 

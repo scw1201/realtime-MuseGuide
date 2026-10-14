@@ -1,44 +1,10 @@
-# Server Migration Guide
+# 新服务器部署参考
 
-MuseGuide can be moved away from the original 718 demo server. The application code is portable; the parts that need migration attention are credentials, Python/Node dependencies, LiveTalking assets, and any large model/avatar files that are not committed to Git.
+原学校服务器已回收；本仓库作为数字人技术参考保留，不提供原服务器的备份、访问入口或在线服务。作者确认原 GPU 是 NVIDIA RTX 4090，其他硬件及完整依赖版本未保留。
 
-## What Is Portable
+先在新机器验证 README 的默认 MP4 + 云端 API 路径，再按 `docs/LIVETALKING_INTEGRATION.md` 准备实时口型环境。配置密钥、域名、HTTPS 和访问控制后，使用 `deploy/systemd/` 的模板，将所有占位符替换为自己的路径和环境。旧服务器专用配置已移除。
 
-- Frontend source and static demo media in `frontend/`
-- FastAPI backend and guide logic in `museguide/`
-- ASR/TTS workers
-- Generic systemd templates in `deploy/systemd/`
-- Remote deployment helper `scripts/deploy_remote.sh`
-
-## What Is Not Committed
-
-These files must be provisioned on the new server:
-
-- `.env`
-- `museguide/configs/secrets.yaml`
-- `.conda/` or any other local Python environment
-- model checkpoints such as `.pth`, `.pt`, `.ckpt`, `.safetensors`, `.onnx`
-- nested LiveTalking runtime repository/data if used directly
-- runtime logs and generated tenant data
-
-## Recommended New Server Layout
-
-Use a normal user account with SSH access:
-
-```text
-/home/<user>/museguide
-```
-
-The deploy script will create:
-
-```text
-/home/<user>/museguide/.conda
-/home/<user>/.config/systemd/user/museguide-*.service
-```
-
-## Deploy To A New Server
-
-From your local checkout:
+可选上传源码：
 
 ```bash
 REMOTE_HOST=user@new-server \
@@ -46,77 +12,6 @@ REMOTE_DIR=/home/user/museguide \
 ./scripts/deploy_remote.sh
 ```
 
-Optional ports:
+上传源码不等于完成部署。另行安装 Python / Node 依赖、填写本地 `.env` 和 `secrets.yaml`、执行 `npm ci && npm run build`，并准备所选模型和人物资产。不要将凭据或用户对话日志提交到 Git。
 
-```bash
-API_PORT=8000 ASR_PORT=9001 TTS_PORT=8765 \
-REMOTE_HOST=user@new-server \
-REMOTE_DIR=/home/user/museguide \
-./scripts/deploy_remote.sh
-```
-
-`REMOTE_DIR` must be an absolute path on the new server. `REMOTE_USER_DIR` defaults to `.config/systemd/user` under the remote login user's home directory.
-
-## Copy Secrets
-
-After the repository is synced, create these files on the new server:
-
-```bash
-ssh user@new-server
-cd /home/user/museguide
-cp .env.example .env
-mkdir -p museguide/configs
-$EDITOR museguide/configs/secrets.yaml
-```
-
-The secrets file should contain the production ASR/TTS/LLM credentials used by your deployment.
-
-## LiveTalking And Avatar Runtime
-
-If you need the live avatar path, provision the LiveTalking runtime and model/avatar assets on the new server. The repository keeps only integration scripts and patches, not all runtime model files.
-
-Useful scripts:
-
-```bash
-./scripts/apply_livetalking_museguide_patch.sh
-./scripts/prepare_livetalking_woman_wav2lip.sh
-./scripts/run_livetalking.sh
-```
-
-For a first migration pass, verify the regular frontend/API/ASR/TTS path before enabling LiveTalking.
-
-## Verify Services
-
-On the new server:
-
-```bash
-systemctl --user status museguide-api.service
-systemctl --user status museguide-asr.service
-systemctl --user status museguide-tts.service
-```
-
-From your local machine:
-
-```bash
-curl http://new-server:8000/healthz
-```
-
-If the frontend is served through Vite during development, use an SSH tunnel:
-
-```bash
-ssh -N \
-  -L 127.0.0.1:5173:127.0.0.1:5173 \
-  -L 127.0.0.1:8000:127.0.0.1:8000 \
-  -L 127.0.0.1:8010:127.0.0.1:8010 \
-  user@new-server
-```
-
-## 718-Specific Files
-
-`deploy/718-linux/` and historical notes may still mention:
-
-```text
-/media/lenovo/aigo/data/my_museguide
-```
-
-Those files are preserved as a record of the graduation demo server. For new machines, prefer `deploy/systemd/` plus `scripts/deploy_remote.sh`.
+验证顺序：API 启动 → 文本对话 → ASR → TTS → 前端播放 → 可选实时口型。检查无凭据管理请求被拒绝，确认公网访问使用 HTTPS，并为公开对话和语音入口增加用户鉴权、限流及云服务预算控制。

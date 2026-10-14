@@ -1,5 +1,7 @@
 import asyncio
 import json
+import os
+import secrets
 import time
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -36,8 +38,6 @@ app.add_middleware(
 
 SECRETS_PATH = Path(__file__).parents[1] / "configs" / "secrets.yaml"
 FRONTEND_DIST_PATH = Path(__file__).parents[2] / "frontend" / "dist"
-ADMIN_TOKEN_TTL_SECONDS = 60 * 60 * 12
-ADMIN_SESSIONS: dict[str, dict] = {}
 ORCHESTRATORS: dict[str, LLMOrchestrator] = {}
 
 
@@ -67,19 +67,16 @@ def _get_orchestrator(tenant_id: str) -> LLMOrchestrator:
 
 
 def require_admin(authorization: str = Header(default="")):
+    expected = os.getenv("MUSEGUIDE_ADMIN_PASSWORD", "")
+    if not expected:
+        raise HTTPException(status_code=503, detail="Administration is disabled: configure MUSEGUIDE_ADMIN_PASSWORD")
     scheme, _, token = authorization.partition(" ")
-    if scheme.lower() == "bearer" and token:
-        session = ADMIN_SESSIONS.get(token) or {}
-        expires_at = float(session.get("expires_at") or 0)
-        if expires_at and expires_at >= time.time():
-            return session
-        ADMIN_SESSIONS.pop(token, None)
-    tenant_id = resolve_tenant_id()
+    if scheme.lower() != "bearer" or not token or not secrets.compare_digest(token.encode(), expected.encode()):
+        raise HTTPException(status_code=401, detail="Invalid administrator credentials", headers={"WWW-Authenticate": "Bearer"})
     return {
-        "tenant_id": tenant_id,
+        "tenant_id": resolve_tenant_id(),
         "username": "admin",
         "role": "owner",
-        "expires_at": time.time() + ADMIN_TOKEN_TTL_SECONDS,
     }
 
 

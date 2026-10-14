@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 
 PY_BIN="${PY_BIN:-python}"
 PERSONA_ID="${PERSONA_ID:-woman_demo}"
-VIDEO_ROOT="${VIDEO_ROOT:-livetalking/test_videos}"
+VIDEO_ROOT="${VIDEO_ROOT:-frontend/public/videos/woman_demo}"
 LIVETALKING_ROOT="${LIVETALKING_ROOT:-livetalking}"
 FACE_DET_BATCH_SIZE="${FACE_DET_BATCH_SIZE:-8}"
 IMG_SIZE="${IMG_SIZE:-256}"
@@ -41,7 +41,6 @@ source_for_state() {
 
 echo "Preparing LiveTalking Wav2Lip assets for ${PERSONA_ID}"
 echo "Selected states: ${STATES}"
-echo "If dependency download is slow, enable your shell proxy first with: proxy_on"
 
 mkdir -p "${LIVETALKING_ROOT}/models"
 if [ ! -f "${LIVETALKING_ROOT}/models/wav2lip.pth" ]; then

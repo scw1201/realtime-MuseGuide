@@ -20,24 +20,20 @@ if [ -f ".env" ]; then
   set +a
 fi
 
-# ============================
-# 启动前清理占用端口
-# ============================
-kill_port() {
-  local port="$1"
-  local pids
-  pids=$(lsof -ti tcp:"$port" 2>/dev/null || true)
-  if [ -n "$pids" ]; then
-    echo "🧹 Killing processes on port $port: $pids"
-    kill -9 $pids || true
-  fi
-}
-
-kill_port 9001
-kill_port 8765
-kill_port 8000
+# Fail rather than terminating unrelated processes.
+ports="9001 8765 8000 5173"
 if [ "${ENABLE_LIVETALKING:-0}" = "1" ]; then
-  kill_port "${LIVETALKING_PORT:-8010}"
+  ports="$ports ${LIVETALKING_PORT:-8010}"
+fi
+for port in $ports; do
+  if lsof -ti tcp:"$port" >/dev/null 2>&1; then
+    echo "Port $port is occupied. Stop the existing service before starting MuseGuide." >&2
+    exit 1
+  fi
+done
+if [ ! -f museguide/configs/secrets.yaml ]; then
+  echo "Copy museguide/configs/secrets.example.yaml to secrets.yaml and configure credentials first." >&2
+  exit 1
 fi
 
 # ============================
@@ -117,6 +113,8 @@ cd ..
 echo "✅ All services started."
 echo "🛑 Press Ctrl+C to stop all."
 
-sleep 2 && open "http://localhost:5173${OPEN_PATH}" &
+if command -v open >/dev/null 2>&1; then
+  (sleep 2; open "http://localhost:5173${OPEN_PATH}") &
+fi
 
 wait
